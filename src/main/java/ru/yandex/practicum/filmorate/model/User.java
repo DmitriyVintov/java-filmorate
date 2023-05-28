@@ -11,12 +11,12 @@ public class User {
     @NotNull(groups = Marker.OnUpdate.class)
     private int id;
     @NotNull
+    @NotBlank
     @Email
     private final String email;
     @NotNull
     @NotBlank
     private final String login;
-    @NotNull
     private String name;
     @NotNull
     @Past
