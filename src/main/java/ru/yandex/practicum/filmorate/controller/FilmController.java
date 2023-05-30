@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Validated
 @RestController
 @RequestMapping("/films")
 @Slf4j
@@ -23,6 +21,7 @@ public class FilmController {
     @PostMapping()
     public Film createFilm(@Valid @RequestBody Film film) {
         film.setId(id);
+        log.info("Фильм с id {} создан", id);
         films.put(id, film);
         id++;
         return film;
@@ -34,6 +33,7 @@ public class FilmController {
             log.error("Такого фильма не существует");
             throw new ValidationException("Такого фильма не существует");
         }
+        log.info("Фильм с id {} обновлен", id);
         films.put(film.getId(), film);
         return film;
     }

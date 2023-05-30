@@ -19,6 +19,6 @@ public class Film {
     @MinimumDate("1895-12-28")
     private final LocalDate releaseDate;
     @NotNull
-    @Positive
+    @Min(value = 0, message = "Продолжительность фильма не должна быть отрицательной")
     private final long duration;
 }
