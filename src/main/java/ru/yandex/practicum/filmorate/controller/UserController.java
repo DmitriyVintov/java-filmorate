@@ -1,52 +1,116 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id = 1;
+    private final UserService userService;
 
     @PostMapping()
     public User createUser(@Valid @RequestBody User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+        Optional<User> first = userService.getUsers().stream()
+                .filter(user1 -> user1.getEmail().equals(user.getEmail()))
+                .findFirst();
+        if (first.isPresent()) {
+            throw new ValidationException("Пользователь с таким email уже существует");
         }
-        user.setId(id);
-        log.info("Пользователь с id {} создан", id);
-        users.put(id, user);
-        id++;
-        return user;
+        return userService.createUser(user);
     }
 
     @PutMapping()
     public User updateUser(@Valid @RequestBody User user) {
-        if (!users.containsKey(user.getId())) {
-            log.error("Такого пользователя не существует");
-            throw new ValidationException("Такого пользователя не существует");
+        Optional<User> first = userService.getUsers().stream()
+                .filter(user1 -> user1.getId().equals(user.getId()))
+                .findFirst();
+        if (first.isEmpty()) {
+            log.error("Пользователя с id {} не существует", user.getId());
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", user.getId()));
         }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-        log.info("Пользователь с id {} обновлен", id);
-        users.put(user.getId(), user);
-        return user;
+        return userService.updateUser(user);
     }
 
     @GetMapping()
-    public List<User> getUsers() {
-        return new ArrayList<>(users.values());
+    public Collection<User> getUsers() {
+        return userService.getUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Integer id) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        return userService.getUserById(id);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteUserById(@PathVariable Integer id) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        userService.deleteUserById(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public Set<User> getFriends(@PathVariable Integer id) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        return userService.getFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Set<User> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        if (!userService.getUsers().contains(userService.getUserById(otherId))) {
+            log.error("Пользователя с id {} не существует", otherId);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", otherId));
+        }
+        return userService.getCommonFriends(id, otherId);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addingToFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        if (!userService.getUsers().contains(userService.getUserById(friendId))) {
+            log.error("Пользователя с id {} не существует", friendId);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
+        }
+        userService.addingToFriends(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void deletingFromFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+        if (!userService.getUsers().contains(userService.getUserById(id))) {
+            log.error("Пользователя с id {} не существует", id);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        }
+        if (!userService.getUsers().contains(userService.getUserById(friendId))) {
+            log.error("Пользователя с id {} не существует", friendId);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
+        }
+        userService.deletingFromFriends(id, friendId);
     }
 }
-
