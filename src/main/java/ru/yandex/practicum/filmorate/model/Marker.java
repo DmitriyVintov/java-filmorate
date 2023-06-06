@@ -4,7 +4,7 @@ public interface Marker {
     interface OnCreate {
     }
 
-    @SuppressWarnings("checkstyle:EmptyLineSeparator")
+    //    @SuppressWarnings("checkstyle:EmptyLineSeparator")
     interface OnUpdate {
     }
 }
