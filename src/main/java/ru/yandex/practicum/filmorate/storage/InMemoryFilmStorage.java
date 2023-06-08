@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
@@ -14,7 +15,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     private int id = 1;
 
     @Override
-    public Film createFilm(Film film) {
+    public Film create(Film film) {
+        if (films.containsKey(film.getId())) {
+            throw new DataAlreadyExistException(String.format("Фильм с id %s уже существует", film.getId()));
+        }
         film.setId(id);
         films.put(id, film);
         id++;
@@ -22,23 +26,23 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilmById(Integer id) {
+    public Film getById(Integer id) {
         return films.get(id);
     }
 
     @Override
-    public List<Film> getFilms() {
+    public List<Film> get() {
         return new ArrayList<>(films.values());
     }
 
     @Override
-    public Film updateFilm(Film film) {
+    public Film update(Film film) {
         films.put(film.getId(), film);
         return film;
     }
 
     @Override
-    public void deleteFilmById(Integer id) {
+    public void deleteById(Integer id) {
         films.remove(id);
     }
 }

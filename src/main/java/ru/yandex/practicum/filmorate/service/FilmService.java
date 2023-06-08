@@ -17,44 +17,44 @@ public class FilmService {
     private final FilmStorage filmStorage;
 
     public Film createFilm(Film film) {
-        Film newFilm = filmStorage.createFilm(film);
+        Film newFilm = filmStorage.create(film);
         log.info("Создан фильм: {}", film.toString());
         return newFilm;
     }
 
     public List<Film> getFilms() {
         log.info("Получение всех фильмов");
-        return filmStorage.getFilms();
+        return filmStorage.get();
     }
 
     public Film getFilmById(Integer id) {
         log.info("Получение фильма с id {}", id);
-        return filmStorage.getFilmById(id);
+        return filmStorage.getById(id);
     }
 
     public Film updateFilm(Film film) {
         log.info("Фильм обновлен: {}", film.toString());
-        return filmStorage.updateFilm(film);
+        return filmStorage.update(film);
     }
 
     public void deleteFilmById(Integer id) {
         log.info("Фильм с id {} удален", id);
-        filmStorage.deleteFilmById(id);
+        filmStorage.deleteById(id);
     }
 
     public void setLike(Integer filmId, Integer userId) {
         log.info("Пользователь id {} поставил лайк фильму id {}", userId, filmId);
-        filmStorage.getFilmById(filmId).setLikes(userId);
+        filmStorage.getById(filmId).setLikes(userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
         log.info("Пользователь id {} удалил лайк у фильма id {}", userId, filmId);
-        filmStorage.getFilmById(filmId).removeLike(userId);
+        filmStorage.getById(filmId).removeLike(userId);
     }
 
     public List<Film> getMostPopularFilms(Integer count) {
         log.info("Получение списка самых популярных фильмов");
-        return filmStorage.getFilms().stream()
+        return filmStorage.get().stream()
                 .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
                         .thenComparing(Film::getReleaseDate).reversed())
                 .limit(count)

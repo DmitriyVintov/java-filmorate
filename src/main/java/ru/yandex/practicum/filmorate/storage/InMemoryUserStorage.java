@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
@@ -14,9 +15,10 @@ public class InMemoryUserStorage implements UserStorage {
     private int id = 1;
 
     @Override
-    public User createUser(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
+    public User create(User user) {
+        validate(user);
+        if (users.containsKey(user.getId())) {
+            throw new DataAlreadyExistException(String.format("Пользователь с id %s уже существует", user.getId()));
         }
         user.setId(id);
         users.put(id, user);
@@ -25,26 +27,30 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> getUsers() {
+    public List<User> get() {
         return new ArrayList<>(users.values());
     }
 
     @Override
-    public User getUserById(Integer id) {
+    public User getById(Integer id) {
         return users.get(id);
     }
 
     @Override
-    public User updateUser(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+    public User update(User user) {
+        validate(user);
         users.put(user.getId(), user);
         return user;
     }
 
+    private static void validate(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+    }
+
     @Override
-    public void deleteUserById(Integer id) {
+    public void deleteById(Integer id) {
         users.remove(id);
     }
 }
