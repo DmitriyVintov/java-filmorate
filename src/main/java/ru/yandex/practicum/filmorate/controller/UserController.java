@@ -51,16 +51,16 @@ public class UserController {
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Integer id) {
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
-        return userService.getUserById(id);
+        return userService.getById(id);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUserById(@PathVariable Integer id) {
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
@@ -69,7 +69,7 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public Set<User> getFriends(@PathVariable Integer id) {
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
@@ -78,11 +78,11 @@ public class UserController {
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Set<User> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
-        if (userService.getUserById(otherId) == null) {
+        if (userService.getById(otherId) == null) {
             log.error("Пользователя с id {} не существует", otherId);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", otherId));
         }
@@ -91,11 +91,11 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addingToFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
-        if (userService.getUserById(friendId) == null) {
+        if (userService.getById(friendId) == null) {
             log.error("Пользователя с id {} не существует", friendId);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
         }
@@ -109,11 +109,11 @@ public class UserController {
             log.error("Пользователя с id {} или пользователя с {} не существует", id, friendId);
             throw new NotFoundException(String.format("Пользователя с id %s или пользователя с %s не существует", id, friendId));
         }
-        if (userService.getUserById(id) == null) {
+        if (userService.getById(id) == null) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
-        if (userService.getUserById(friendId) == null) {
+        if (userService.getById(friendId) == null) {
             log.error("Пользователя с id {} не существует", friendId);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
         }

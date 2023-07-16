@@ -1,11 +1,4 @@
-DROP TABLE if exists users;
-DROP TABLE if exists films;
-DROP TABLE if exists films_genres;
-DROP TABLE if exists likes;
-DROP TABLE if exists friends;
-DROP TABLE if exists genres;
-DROP TABLE if exists mpa_ratings;
-
+DROP TABLE if exists genres, mpa_ratings, users, films, films_genres, likes, friends;
 
 CREATE TABLE if not exists users
 (

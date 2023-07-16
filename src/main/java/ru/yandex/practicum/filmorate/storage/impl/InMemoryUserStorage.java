@@ -54,23 +54,6 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Set<User> getFriends(Integer id) {
-        return getById(id).getFriends().stream()
-                .map(this::getById)
-                .sorted(Comparator.comparingInt(User::getId))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
-    @Override
-    public Set<User> getCommonFriends(Integer id, Integer otherId) {
-        Set<Integer> friendsByOtherId = getById(otherId).getFriends();
-        return getById(id).getFriends().stream()
-                .filter(friendsByOtherId::contains)
-                .map(this::getById)
-                .collect(Collectors.toSet());
-    }
-
-    @Override
     public void addingToFriends(Integer id, Integer friendId) {
         getById(id).setFriends(friendId);
         getById(friendId).setFriends(id);

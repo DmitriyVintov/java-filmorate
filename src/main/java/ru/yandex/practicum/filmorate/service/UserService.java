@@ -6,8 +6,11 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Qualifier("dbUserStorage")
@@ -31,7 +34,7 @@ public class UserService {
         return userStorage.get();
     }
 
-    public User getUserById(Integer id) {
+    public User getById(Integer id) {
 //        log.info("Получение пользователя с id {}", id);
         return userStorage.getById(id);
     }
@@ -48,14 +51,20 @@ public class UserService {
 
     public Set<User> getFriends(Integer id) {
         log.info("Получение друзей у пользователя с id {}", id);
-        log.info("Список друзей пользователя id {}: {}", id, userStorage.getFriends(id).toString());
-        return userStorage.getFriends(id);
+        log.info("Список друзей пользователя id {}: {}", id, userStorage.getById(id).getFriends().toString());
+        return userStorage.getById(id).getFriends().stream()
+                .map(this::getById)
+                .sorted(Comparator.comparingInt(User::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public Set<User> getCommonFriends(Integer id, Integer otherId) {
         log.info("Получение общих друзей у пользователей с id {} и {}", id, otherId);
-        log.info("Список общих друзей: {}", userStorage.getCommonFriends(id, otherId).toString());
-        return userStorage.getCommonFriends(id, otherId);
+        Set<Integer> friendsByOtherId = getById(otherId).getFriends();
+        return getById(id).getFriends().stream()
+                .filter(friendsByOtherId::contains)
+                .map(this::getById)
+                .collect(Collectors.toSet());
     }
 
     public void addingToFriends(Integer id, Integer friendId) {

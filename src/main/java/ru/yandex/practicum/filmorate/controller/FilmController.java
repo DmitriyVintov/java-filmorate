@@ -74,7 +74,7 @@ public class FilmController {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
         }
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
+        if (!userService.getUsers().contains(userService.getById(id))) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
@@ -91,7 +91,7 @@ public class FilmController {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
         }
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
+        if (!userService.getUsers().contains(userService.getById(id))) {
             log.error("Пользователя с id {} не существует", id);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
         }
