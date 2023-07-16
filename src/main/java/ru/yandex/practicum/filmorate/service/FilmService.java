@@ -1,20 +1,23 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@Qualifier("dbFilmStorage")
 @Slf4j
 public class FilmService {
+    @Qualifier("dbFilmStorage")
     private final FilmStorage filmStorage;
+
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
+    }
 
     public Film createFilm(Film film) {
         Film newFilm = filmStorage.create(film);
@@ -44,20 +47,16 @@ public class FilmService {
 
     public void setLike(Integer filmId, Integer userId) {
         log.info("Пользователь id {} поставил лайк фильму id {}", userId, filmId);
-        filmStorage.getById(filmId).setLikes(userId);
+        filmStorage.setLike(filmId, userId);
     }
 
     public void removeLike(Integer filmId, Integer userId) {
         log.info("Пользователь id {} удалил лайк у фильма id {}", userId, filmId);
-        filmStorage.getById(filmId).removeLike(userId);
+        filmStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getMostPopularFilms(Integer count) {
         log.info("Получение списка самых популярных фильмов");
-        return filmStorage.get().stream()
-                .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
-                        .thenComparing(Film::getReleaseDate).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.getMostPopularFilms(count);
     }
 }

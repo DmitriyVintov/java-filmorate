@@ -22,8 +22,11 @@ public class Film {
     private final LocalDate releaseDate;
     @NotNull
     @Min(value = 0, message = "Продолжительность фильма не должна быть отрицательной")
-    private final long duration;
-    private final Set<Integer> likes = new HashSet<>();
+    private final int duration;
+    private Set<Integer> likes = new HashSet<>();
+    private Set<Genre> genres = new HashSet<>();
+    private final Mpa mpa;
+    private Integer rate = 0;
 
     public void setLikes(Integer id) {
         likes.add(id);

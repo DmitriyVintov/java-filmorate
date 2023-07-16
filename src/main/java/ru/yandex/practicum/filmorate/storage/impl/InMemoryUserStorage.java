@@ -1,13 +1,12 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
@@ -52,5 +51,34 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public void deleteById(Integer id) {
         users.remove(id);
+    }
+
+    @Override
+    public Set<User> getFriends(Integer id) {
+        return getById(id).getFriends().stream()
+                .map(this::getById)
+                .sorted(Comparator.comparingInt(User::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    @Override
+    public Set<User> getCommonFriends(Integer id, Integer otherId) {
+        Set<Integer> friendsByOtherId = getById(otherId).getFriends();
+        return getById(id).getFriends().stream()
+                .filter(friendsByOtherId::contains)
+                .map(this::getById)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public void addingToFriends(Integer id, Integer friendId) {
+        getById(id).setFriends(friendId);
+        getById(friendId).setFriends(id);
+    }
+
+    @Override
+    public void deletingFromFriends(Integer id, Integer friendId) {
+        getById(id).removeFriends(friendId);
+        getById(friendId).removeFriends(id);
     }
 }
