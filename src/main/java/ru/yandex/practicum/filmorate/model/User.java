@@ -24,20 +24,16 @@ public class User {
     @NotNull
     @NotBlank
     @Email
-    private final String email;
+    private String email;
     @NotNull
     @NotBlank
     @Pattern(regexp = "\\S*", message = "Логин не должен содержать пробелов")
-    private final String login;
+    private String login;
     private String name;
     @NotNull
     @Past
-    private final LocalDate birthday;
+    private LocalDate birthday;
     private Set<Integer> friends = new HashSet<>();
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public void setFriends(Integer id) {
         friends.add(id);

@@ -7,9 +7,14 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class Genre {
+    public Genre(Integer id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     @NotNull
-    private final Integer id;
+    private Integer id;
     @NotNull
     @NotBlank
-    private final String name;
+    private String name;
 }

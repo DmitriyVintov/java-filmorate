@@ -1,23 +1,23 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
 
-public interface FilmStorage extends StorageAdv<Film> {
-    Film create(Film film);
+public interface FilmStorage extends Storage<Film> {
 
-    List<Film> get();
+    List<Film> getAll();
 
-    Film update(Film film);
+    Film getById(Integer id) throws NotFoundException;
 
-    Film getById(Integer id);
+    Film create(Film user);
+
+    Film update(Film user);
 
     void deleteById(Integer id);
 
-    void setLike(Integer filmId, Integer userId);
+    void addLike(Integer filmId, Integer userId);
 
-    void removeLike(Integer filmId, Integer userId);
-
-    List<Film> getMostPopularFilms(Integer count);
+    void deleteLike(Integer filmId, Integer userId);
 }

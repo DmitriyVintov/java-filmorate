@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -10,13 +10,14 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/films")
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Slf4j
 public class FilmController {
     private final FilmService filmService;
@@ -35,7 +36,13 @@ public class FilmController {
 
     @GetMapping()
     public Collection<Film> getFilms() {
-        return filmService.getFilms();
+        List<Film> films = new ArrayList<>();
+        try {
+            films = filmService.getFilms();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return films;
     }
 
     @GetMapping("/{id}")
@@ -74,9 +81,9 @@ public class FilmController {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
         }
-        if (!userService.getUsers().contains(userService.getById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        if (!userService.getUsers().contains(userService.getById(userId))) {
+            log.error("Пользователя с id {} не существует", userId);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", userId));
         }
         filmService.setLike(id, userId);
     }
@@ -91,9 +98,9 @@ public class FilmController {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
         }
-        if (!userService.getUsers().contains(userService.getById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
+        if (!userService.getUsers().contains(userService.getById(userId))) {
+            log.error("Пользователя с id {} не существует", userId);
+            throw new NotFoundException(String.format("Пользователя с id %s не существует", userId));
         }
         filmService.removeLike(id, userId);
     }

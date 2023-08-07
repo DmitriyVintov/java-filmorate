@@ -7,9 +7,14 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class Mpa {
+    public Mpa(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     @NotNull
-    private final Integer id;
+    private int id;
     @NotNull
     @NotBlank
-    private final String name;
+    private String name;
 }

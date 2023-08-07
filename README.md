@@ -12,4 +12,4 @@
 Следите за нашими обновлениями! Наше приложение становится лучше каждый день! :)
 
 ### ER-диаграмма
-![ER-diagram](src/main/resources/static/ER-diagram.png)
+![ER-diagram](src/main/resources/ER-diagram.png)

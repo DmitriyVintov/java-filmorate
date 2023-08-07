@@ -30,12 +30,12 @@ public class UserService {
     }
 
     public List<User> getUsers() {
-//        log.info("Получение всех пользователей");
-        return userStorage.get();
+        log.info("Все пользователи: {}", userStorage.getAll());
+        return userStorage.getAll();
     }
 
     public User getById(Integer id) {
-//        log.info("Получение пользователя с id {}", id);
+        log.info("Получение пользователя с id {}: {}", id, userStorage.getById(id));
         return userStorage.getById(id);
     }
 
@@ -50,7 +50,6 @@ public class UserService {
     }
 
     public Set<User> getFriends(Integer id) {
-        log.info("Получение друзей у пользователя с id {}", id);
         log.info("Список друзей пользователя id {}: {}", id, userStorage.getById(id).getFriends().toString());
         return userStorage.getById(id).getFriends().stream()
                 .map(this::getById)
@@ -59,8 +58,11 @@ public class UserService {
     }
 
     public Set<User> getCommonFriends(Integer id, Integer otherId) {
-        log.info("Получение общих друзей у пользователей с id {} и {}", id, otherId);
         Set<Integer> friendsByOtherId = getById(otherId).getFriends();
+        log.info("Получение общих друзей у пользователей с id {} и {}: {}", id, otherId, getById(id).getFriends().stream()
+                .filter(friendsByOtherId::contains)
+                .map(this::getById)
+                .collect(Collectors.toSet()));
         return getById(id).getFriends().stream()
                 .filter(friendsByOtherId::contains)
                 .map(this::getById)
@@ -69,11 +71,11 @@ public class UserService {
 
     public void addingToFriends(Integer id, Integer friendId) {
         log.info("Добавление в друзья пользователю с id {} пользователя с id {}", id, friendId);
-        userStorage.addingToFriends(id, friendId);
+        userStorage.addFriend(id, friendId);
     }
 
     public void deletingFromFriends(Integer id, Integer friendId) {
         log.info("Удаление из друзей пользователя с id {} пользователя с id {}", id, friendId);
-        userStorage.deletingFromFriends(id, friendId);
+        userStorage.deleteFriend(id, friendId);
     }
 }

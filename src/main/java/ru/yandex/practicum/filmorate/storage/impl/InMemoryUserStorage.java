@@ -5,8 +5,10 @@ import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
@@ -26,7 +28,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> get() {
+    public List<User> getAll() {
         return new ArrayList<>(users.values());
     }
 
@@ -54,14 +56,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void addingToFriends(Integer id, Integer friendId) {
-        getById(id).setFriends(friendId);
-        getById(friendId).setFriends(id);
+    public void addFriend(Integer userId, Integer friendId) {
+        getById(userId).setFriends(friendId);
     }
 
     @Override
-    public void deletingFromFriends(Integer id, Integer friendId) {
-        getById(id).removeFriends(friendId);
-        getById(friendId).removeFriends(id);
+    public void deleteFriend(Integer userId, Integer friendId) {
+        getById(userId).removeFriends(friendId);
+
     }
 }

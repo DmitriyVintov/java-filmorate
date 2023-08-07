@@ -17,13 +17,14 @@ import java.util.Objects;
 @Repository
 @RequiredArgsConstructor
 public class DbUserStorage implements UserStorage {
-    private static final String SELECT_USER = "SELECT id, email, login, name, birthday, f.friend_id as friends " +
-            "FROM users as u LEFT JOIN friends as f ON u.id = f.user_id WHERE id = ?";
-    private static final String DELETE_FRIENDS = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
-    private static final String UPDATE_USER = "UPDATE users set  email=?, login=?, name=?, birthday=? WHERE id=?";
-    private static final String SELECT_ALL_USER = "SELECT id, email, login, name, birthday, f.friend_id as friends " +
-            "FROM users as u LEFT JOIN friends as f ON u.id=f.user_id ORDER BY id";
-    private static final String DELETE_USER = "delete from users where id = ?";
+    private static final String GET_USER = "SELECT u.user_id, u.email, u.login, u.user_name, u.birthday, f.friend_id " +
+            "FROM users as u LEFT JOIN friends as f ON u.user_id = f.user_id WHERE u.user_id = ?";
+    private static final String GET_ALL_USERS = "SELECT u.user_id, email, login, user_name, birthday, f.friend_id " +
+            "FROM users as u LEFT JOIN friends as f ON u.user_id = f.user_id ORDER BY u.user_id";
+    private static final String UPDATE_USER = "UPDATE users set  email = ?, login = ?, user_name=?, birthday=? WHERE user_id=?";
+    private static final String DELETE_USER = "DELETE FROM users WHERE user_id = ?";
+    private static final String ADD_FRIEND = "INSERT INTO friends (user_id, friend_id) VALUES (? , ?)";
+    private static final String DELETE_FRIEND = "DELETE FROM friends WHERE user_id = ? AND friend_id = ?";
     private final JdbcTemplate jdbcTemplate;
 
     @Override
@@ -31,16 +32,20 @@ public class DbUserStorage implements UserStorage {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
-                .withTableName("users")
-                .usingGeneratedKeyColumns("id");
-        Map<String, Object> params = Map.of(
-                "email", user.getEmail(),
-                "login", user.getLogin(),
-                "name", user.getName(),
-                "birthday", java.sql.Date.valueOf(user.getBirthday()));
-        Number number = simpleJdbcInsert.executeAndReturnKey(params);
-        user.setId(number.intValue());
+        try {
+            SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
+                    .withTableName("users")
+                    .usingGeneratedKeyColumns("user_id");
+            Map<String, Object> params = Map.of(
+                    "email", user.getEmail(),
+                    "login", user.getLogin(),
+                    "user_name", user.getName(),
+                    "birthday", java.sql.Date.valueOf(user.getBirthday()));
+            Number number = simpleJdbcInsert.executeAndReturnKey(params);
+            user.setId(number.intValue());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return user;
     }
 
@@ -52,13 +57,13 @@ public class DbUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> get() {
-        return jdbcTemplate.query(SELECT_ALL_USER, usersRowMapper()).stream().findFirst().orElse(new ArrayList<>());
+    public List<User> getAll() {
+        return jdbcTemplate.query(GET_ALL_USERS, usersListRowMapper()).stream().findFirst().orElse(new ArrayList<>());
     }
 
     @Override
     public User getById(Integer id) {
-        return jdbcTemplate.query(SELECT_USER, userRowMapper(), id).stream()
+        return jdbcTemplate.query(GET_USER, userRowMapper(), id).stream()
                 .findFirst().orElseThrow(() -> new NotFoundException("Пользователя с id " + id + " не существует"));
     }
 
@@ -68,16 +73,13 @@ public class DbUserStorage implements UserStorage {
     }
 
     @Override
-    public void addingToFriends(Integer id, Integer friendId) {
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate.getDataSource())
-                .withTableName("friends");
-        Map<String, Integer> params = Map.of("user_id", id, "friend_id", friendId);
-        simpleJdbcInsert.execute(params);
+    public void addFriend(Integer userId, Integer friendId) {
+        jdbcTemplate.update(ADD_FRIEND, userId, friendId);
     }
 
     @Override
-    public void deletingFromFriends(Integer id, Integer friendId) {
-        jdbcTemplate.update(DELETE_FRIENDS, id, friendId);
+    public void deleteFriend(Integer userId, Integer friendId) {
+        jdbcTemplate.update(DELETE_FRIEND, userId, friendId);
     }
 
     private RowMapper<User> userRowMapper() {
@@ -85,13 +87,13 @@ public class DbUserStorage implements UserStorage {
             User user = new User(
                     rs.getString("email"),
                     rs.getString("login"),
-                    rs.getString("name"),
+                    rs.getString("user_name"),
                     rs.getDate("birthday").toLocalDate()
             );
-            user.setId(rs.getInt("id"));
+            user.setId(rs.getInt("user_id"));
             do {
-                if (rs.getInt("friends") > 0) {
-                    user.getFriends().add(rs.getInt("friends"));
+                if (rs.getInt("friend_id") > 0) {
+                    user.getFriends().add(rs.getInt("friend_id"));
                 }
             } while (rs.next());
 
@@ -99,33 +101,33 @@ public class DbUserStorage implements UserStorage {
         };
     }
 
-    private RowMapper<List<User>> usersRowMapper() {
+    private RowMapper<List<User>> usersListRowMapper() {
         return (rs, rowNum) -> {
             List<User> users = new ArrayList<>();
             User user = new User(
                     rs.getString("email"),
                     rs.getString("login"),
-                    rs.getString("name"),
+                    rs.getString("user_name"),
                     rs.getDate("birthday").toLocalDate()
             );
-            user.setId(rs.getInt("id"));
-            if (rs.getInt("friends") > 0) {
-                user.getFriends().add(rs.getInt("friends"));
+            user.setId(rs.getInt("user_id"));
+            if (rs.getInt("friend_id") > 0) {
+                user.getFriends().add(rs.getInt("friend_id"));
             }
             while (rs.next()) {
-                if (user.getId() != rs.getInt("id")) {
+                if (user.getId() != rs.getInt("user_id")) {
                     users.add(user);
                     user = new User(
                             rs.getString("email"),
                             rs.getString("login"),
-                            rs.getString("name"),
+                            rs.getString("user_name"),
                             rs.getDate("birthday").toLocalDate()
                     );
-                    user.setId(rs.getInt("id"));
+                    user.setId(rs.getInt("user_id"));
 
                 }
-                if (rs.getInt("friends") > 0) {
-                    user.getFriends().add(rs.getInt("friends"));
+                if (rs.getInt("friend_id") > 0) {
+                    user.getFriends().add(rs.getInt("friend_id"));
                 }
             }
             users.add(user);
