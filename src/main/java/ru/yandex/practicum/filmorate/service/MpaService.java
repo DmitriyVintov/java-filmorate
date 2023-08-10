@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
@@ -22,6 +23,10 @@ public class MpaService {
     }
 
     public Mpa getMpaById(Integer id) {
+        if (!getMpaList().contains(mpaStorage.getById(id))) {
+            log.error("Рейтинга MPA с id {} не существует", id);
+            throw new NotFoundException(String.format("Рейтинга MPA с id %s не существует", id));
+        }
         log.info("Получение рейтинга MPA с id {}: {}", id, mpaStorage.getById(id));
         return mpaStorage.getById(id);
     }

@@ -20,17 +20,16 @@ public class User {
 
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
+    @Min(value = 1, message = "Значение id не может быть меньше 1")
     private Integer id;
-    @NotNull
-    @NotBlank
-    @Email
+    @NotBlank(message = "Email не может быть пустым")
+    @Email(message = "Не верный формат email")
     private String email;
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Login не может быть пустым")
     @Pattern(regexp = "\\S*", message = "Логин не должен содержать пробелов")
     private String login;
     private String name;
-    @NotNull
+    @NotNull(message = "Дата рождения не может быть пустой")
     @Past
     private LocalDate birthday;
     private Set<Integer> friends = new HashSet<>();

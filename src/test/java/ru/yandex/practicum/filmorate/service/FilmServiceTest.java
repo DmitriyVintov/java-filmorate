@@ -23,6 +23,7 @@ class FilmServiceTest {
     private static Validator validator;
     private static FilmService filmService;
     private static UserService userService;
+    private static InMemoryUserStorage userStorage;
     private static Film film1;
     private static Film film2;
     private static Film film3;
@@ -35,8 +36,9 @@ class FilmServiceTest {
 
     @BeforeEach
     public void setController() {
-        filmService = new FilmService(new InMemoryFilmStorage());
-        userService = new UserService(new InMemoryUserStorage());
+        userStorage = new InMemoryUserStorage();
+        userService = new UserService(userStorage);
+        filmService = new FilmService(new InMemoryFilmStorage(), userStorage);
         film1 = new Film("film", "descr film", LocalDate.parse("2023-01-01"), 120);
         film2 = new Film("film2", "descr film", LocalDate.parse("2023-01-01"), 120);
         film3 = new Film("film3", "descr film", LocalDate.parse("2023-01-01"), 120);
@@ -148,6 +150,9 @@ class FilmServiceTest {
         filmService.createFilm(FilmServiceTest.film1);
         filmService.createFilm(FilmServiceTest.film2);
         filmService.createFilm(FilmServiceTest.film3);
+        userService.createUser(new User("mail1@yandex.ru", "login1", "name1", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail2@yandex.ru", "login2", "name2", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail3@yandex.ru", "login3", "name3", LocalDate.parse("1985-06-06")));
         filmService.setLike(1, 1);
         filmService.setLike(2, 1);
         filmService.setLike(2, 2);

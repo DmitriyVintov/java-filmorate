@@ -32,9 +32,9 @@ class UserServiceTest {
     @BeforeEach
     public void setUp() {
         userService = new UserService(new InMemoryUserStorage());
-        user1 = new User("email@yandex.ru", "login1","name1", LocalDate.parse("1917-11-07"));
-        user2 = new User("email@yandex.ru", "login2", "name2",  LocalDate.parse("1917-11-07"));
-        user3 = new User("email@yandex.ru", "login3", "name3", LocalDate.parse("1917-11-07"));
+        user1 = new User("email1@yandex.ru", "login1","name1", LocalDate.parse("1917-11-07"));
+        user2 = new User("email2@yandex.ru", "login2", "name2",  LocalDate.parse("1917-11-07"));
+        user3 = new User("email3@yandex.ru", "login3", "name3", LocalDate.parse("1917-11-07"));
     }
 
     @Test

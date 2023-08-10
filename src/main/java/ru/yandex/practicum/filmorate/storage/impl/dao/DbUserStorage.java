@@ -32,20 +32,16 @@ public class DbUserStorage implements UserStorage {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        try {
-            SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
-                    .withTableName("users")
-                    .usingGeneratedKeyColumns("user_id");
-            Map<String, Object> params = Map.of(
-                    "email", user.getEmail(),
-                    "login", user.getLogin(),
-                    "user_name", user.getName(),
-                    "birthday", java.sql.Date.valueOf(user.getBirthday()));
-            Number number = simpleJdbcInsert.executeAndReturnKey(params);
-            user.setId(number.intValue());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
+                .withTableName("users")
+                .usingGeneratedKeyColumns("user_id");
+        Map<String, Object> params = Map.of(
+                "email", user.getEmail(),
+                "login", user.getLogin(),
+                "user_name", user.getName(),
+                "birthday", java.sql.Date.valueOf(user.getBirthday()));
+        Number number = simpleJdbcInsert.executeAndReturnKey(params);
+        user.setId(number.intValue());
         return user;
     }
 

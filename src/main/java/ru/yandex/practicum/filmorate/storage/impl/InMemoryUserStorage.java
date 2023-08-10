@@ -44,12 +44,6 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
-    private static void validate(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-    }
-
     @Override
     public void deleteById(Integer id) {
         users.remove(id);
@@ -64,5 +58,11 @@ public class InMemoryUserStorage implements UserStorage {
     public void deleteFriend(Integer userId, Integer friendId) {
         getById(userId).removeFriends(friendId);
 
+    }
+
+    private static void validate(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }

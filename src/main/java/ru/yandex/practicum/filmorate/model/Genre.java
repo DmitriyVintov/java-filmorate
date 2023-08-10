@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -12,9 +12,8 @@ public class Genre {
         this.name = name;
     }
 
-    @NotNull
+    @NotNull(message = "Id жанра не может быть пустым")
+    @Min(value = 1, message = "Значение id не может быть меньше 1")
     private Integer id;
-    @NotNull
-    @NotBlank
     private String name;
 }

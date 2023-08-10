@@ -16,30 +16,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class RatingMpaControllerTest {
+class MpaControllerTest {
     @Autowired
     private final JdbcTemplate jdbcTemplate;
     @Autowired
-    private RatingMpaController ratingMpaController;
+    private MpaController mpaController;
 
-    public RatingMpaControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
+    public MpaControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @BeforeEach
     void setUp() {
-        ratingMpaController = new RatingMpaController(new MpaService(new DbMpaStorage(jdbcTemplate)));
+        mpaController = new MpaController(new MpaService(new DbMpaStorage(jdbcTemplate)));
     }
 
     @Test
     @DisplayName("Получение списка рейтингов Mpa")
     void getMpaList() {
-        assertEquals(5, ratingMpaController.getMpaList().size());
+        assertEquals(5, mpaController.getMpaList().size());
     }
 
     @Test
     @DisplayName("Получение рейтинга Mpa по id")
     void getMpaById() {
-        assertEquals("G", ratingMpaController.getMpaById(1).getName());
+        assertEquals("G", mpaController.getMpaById(1).getName());
     }
 }
