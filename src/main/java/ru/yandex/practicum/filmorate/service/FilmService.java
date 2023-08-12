@@ -41,14 +41,16 @@ public class FilmService {
     }
 
     public List<Film> getFilms() {
-        log.info("Все фильмы: {}", filmStorage.getAll());
-        return filmStorage.getAll();
+        List<Film> allFilms = filmStorage.getAll();
+        log.info("Все фильмы: {}", allFilms);
+        return allFilms;
     }
 
     public Film getFilmById(Integer id) {
         validateFilm(id);
-        log.info("Получение фильма с id {}: {}", id, filmStorage.getById(id));
-        return filmStorage.getById(id);
+        Film filmById = filmStorage.getById(id);
+        log.info("Получение фильма с id {}: {}", id, filmById);
+        return filmById;
     }
 
     public Film updateFilm(Film film) {
@@ -81,27 +83,24 @@ public class FilmService {
         if (count <= 0) {
             throw new ValidationException("Значение count не может быть отрицательным");
         }
-        log.info("Получение списка самых популярных фильмов: {}", filmStorage.getAll().stream()
-                .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
-                        .thenComparing(Film::getReleaseDate).reversed())
-                .limit(count)
-                .collect(Collectors.toList()));
-        return filmStorage.getAll().stream()
+        List<Film> mostPopularFilms = filmStorage.getAll().stream()
                 .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
                         .thenComparing(Film::getReleaseDate).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
+        log.info("Получение списка самых популярных фильмов: {}", mostPopularFilms);
+        return mostPopularFilms;
     }
 
     private void validateFilm(Integer id) {
-        if (!getFilms().contains(filmStorage.getById(id))) {
+        if (filmStorage.getById(id) == null) {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
         }
     }
 
     private void validateUser(Integer userId) {
-        if (!userStorage.getAll().contains(userStorage.getById(userId))) {
+        if (userStorage.getById(userId) == null) {
             log.error("Пользователя с id {} не существует", userId);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", userId));
         }

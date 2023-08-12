@@ -30,14 +30,16 @@ public class UserService {
     }
 
     public List<User> getUsers() {
-        log.info("Все пользователи: {}", userStorage.getAll());
-        return userStorage.getAll();
+        List<User> allUsers = userStorage.getAll();
+        log.info("Все пользователи: {}", allUsers);
+        return allUsers;
     }
 
     public User getById(Integer id) {
         validateUser(id);
-        log.info("Получение пользователя с id {}: {}", id, userStorage.getById(id));
-        return userStorage.getById(id);
+        User userById = userStorage.getById(id);
+        log.info("Получение пользователя с id {}: {}", id, userById);
+        return userById;
     }
 
     public User updateUser(User user) {
@@ -54,8 +56,9 @@ public class UserService {
 
     public Set<User> getFriends(Integer id) {
         validateUser(id);
-        log.info("Список друзей пользователя id {}: {}", id, userStorage.getById(id).getFriends().toString());
-        return userStorage.getById(id).getFriends().stream()
+        Set<Integer> friends = userStorage.getById(id).getFriends();
+        log.info("Список друзей пользователя id {}: {}", id, friends.toString());
+        return friends.stream()
                 .map(this::getById)
                 .sorted(Comparator.comparingInt(User::getId))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -66,14 +69,12 @@ public class UserService {
         validateUser(otherId);
         validateSelfAddition(id, otherId);
         Set<Integer> friendsByOtherId = getById(otherId).getFriends();
-        log.info("Получение общих друзей у пользователей с id {} и {}: {}", id, otherId, getById(id).getFriends().stream()
-                .filter(friendsByOtherId::contains)
-                .map(this::getById)
-                .collect(Collectors.toSet()));
-        return getById(id).getFriends().stream()
+        Set<User> commonFriends = getById(id).getFriends().stream()
                 .filter(friendsByOtherId::contains)
                 .map(this::getById)
                 .collect(Collectors.toSet());
+        log.info("Получение общих друзей у пользователей с id {} и {}: {}", id, otherId, commonFriends);
+        return commonFriends;
     }
 
     public void addingToFriends(Integer id, Integer friendId) {
@@ -93,19 +94,20 @@ public class UserService {
     }
 
     private void validateOnCreateUser(User user) {
-        Optional<User> userValidationEmail = getUsers().stream()
+        List<User> users = getUsers();
+        Optional<User> userValidationEmail = users.stream()
                 .filter(user1 -> user1.getEmail().equals(user.getEmail()))
                 .findFirst();
         if (userValidationEmail.isPresent()) {
             throw new DataAlreadyExistException("Пользователь с таким email уже существует");
         }
-        Optional<User> userValidationLogin = getUsers().stream()
+        Optional<User> userValidationLogin = users.stream()
                 .filter(user1 -> user1.getLogin().equals(user.getLogin()))
                 .findFirst();
         if (userValidationLogin.isPresent()) {
             throw new DataAlreadyExistException("Пользователь с таким login уже существует");
         }
-        Optional<User> userValidationName = getUsers().stream()
+        Optional<User> userValidationName = users.stream()
                 .filter(user1 -> user1.getName().equals(user.getName()))
                 .findFirst();
         if (userValidationName.isPresent()) {
@@ -114,7 +116,7 @@ public class UserService {
     }
 
     private void validateUser(Integer userId) {
-        if (!userStorage.getAll().contains(userStorage.getById(userId))) {
+        if (userStorage.getById(userId) == null) {
             log.error("Пользователя с id {} не существует", userId);
             throw new NotFoundException(String.format("Пользователя с id %s не существует", userId));
         }

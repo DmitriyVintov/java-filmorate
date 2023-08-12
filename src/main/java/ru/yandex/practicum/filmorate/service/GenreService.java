@@ -18,16 +18,18 @@ public class GenreService {
     }
 
     public List<Genre> getGenres() {
-        log.info("Все жанры: {}", genreStorage.getAll());
-        return genreStorage.getAll();
+        List<Genre> allGenres = genreStorage.getAll();
+        log.info("Все жанры: {}", allGenres);
+        return allGenres;
     }
 
     public Genre getGenreById(Integer id) {
-        if (!getGenres().contains(genreStorage.getById(id))) {
+        Genre genreById = genreStorage.getById(id);
+        if (genreById == null) {
             log.error("Жанра с id {} не существует", id);
             throw new NotFoundException(String.format("Жанра с id %s не существует", id));
         }
-        log.info("Получение жанра с id {}: {}", id, genreStorage.getById(id));
-        return genreStorage.getById(id);
+        log.info("Получение жанра с id {}: {}", id, genreById);
+        return genreById;
     }
 }

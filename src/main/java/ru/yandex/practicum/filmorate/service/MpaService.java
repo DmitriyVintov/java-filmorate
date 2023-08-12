@@ -18,16 +18,18 @@ public class MpaService {
     }
 
     public List<Mpa> getMpaList() {
-        log.info("Все рейтинги MPA: {}", mpaStorage.getAll());
-        return mpaStorage.getAll();
+        List<Mpa> allMpa = mpaStorage.getAll();
+        log.info("Все рейтинги MPA: {}", allMpa);
+        return allMpa;
     }
 
     public Mpa getMpaById(Integer id) {
-        if (!getMpaList().contains(mpaStorage.getById(id))) {
+        Mpa mpaById = mpaStorage.getById(id);
+        if (mpaById == null) {
             log.error("Рейтинга MPA с id {} не существует", id);
             throw new NotFoundException(String.format("Рейтинга MPA с id %s не существует", id));
         }
-        log.info("Получение рейтинга MPA с id {}: {}", id, mpaStorage.getById(id));
-        return mpaStorage.getById(id);
+        log.info("Получение рейтинга MPA с id {}: {}", id, mpaById);
+        return mpaById;
     }
 }
