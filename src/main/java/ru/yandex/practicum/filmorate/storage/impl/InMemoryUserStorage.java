@@ -1,8 +1,9 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> get() {
+    public List<User> getAll() {
         return new ArrayList<>(users.values());
     }
 
@@ -43,14 +44,25 @@ public class InMemoryUserStorage implements UserStorage {
         return user;
     }
 
+    @Override
+    public void deleteById(Integer id) {
+        users.remove(id);
+    }
+
+    @Override
+    public void addFriend(Integer userId, Integer friendId) {
+        getById(userId).setFriends(friendId);
+    }
+
+    @Override
+    public void deleteFriend(Integer userId, Integer friendId) {
+        getById(userId).removeFriends(friendId);
+
+    }
+
     private static void validate(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-    }
-
-    @Override
-    public void deleteById(Integer id) {
-        users.remove(id);
     }
 }

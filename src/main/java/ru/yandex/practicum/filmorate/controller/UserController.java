@@ -3,14 +3,11 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 @RestController
@@ -22,99 +19,55 @@ public class UserController {
 
     @PostMapping()
     public User createUser(@Valid @RequestBody User user) {
-        Optional<User> first = userService.getUsers().stream()
-                .filter(user1 -> user1.getEmail().equals(user.getEmail()))
-                .findFirst();
-        if (first.isPresent()) {
-            throw new ValidationException("Пользователь с таким email уже существует");
-        }
+        log.info("Поступил запрос на создание пользователя");
         return userService.createUser(user);
     }
 
     @PutMapping()
     public User updateUser(@Valid @RequestBody User user) {
-        Optional<User> first = userService.getUsers().stream()
-                .filter(user1 -> user1.getId().equals(user.getId()))
-                .findFirst();
-        if (first.isEmpty()) {
-            log.error("Пользователя с id {} не существует", user.getId());
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", user.getId()));
-        }
+        log.info(String.format("Поступил запрос на обновление пользователя с id %s", user.getId()));
         return userService.updateUser(user);
     }
 
     @GetMapping()
     public Collection<User> getUsers() {
+        log.info("Поступил запрос на получение всех пользователей");
         return userService.getUsers();
     }
 
     @GetMapping("/{id}")
     public User getUserById(@PathVariable Integer id) {
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
-        return userService.getUserById(id);
+        log.info(String.format("Поступил запрос на получение пользователя с id %s", id));
+        return userService.getById(id);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUserById(@PathVariable Integer id) {
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
+        log.info(String.format("Поступил запрос на удаление пользователя с id %s", id));
         userService.deleteUserById(id);
     }
 
     @GetMapping("/{id}/friends")
     public Set<User> getFriends(@PathVariable Integer id) {
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
+        log.info(String.format("Поступил запрос на получение друзей пользователя с id %s", id));
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public Set<User> getCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
-        if (!userService.getUsers().contains(userService.getUserById(otherId))) {
-            log.error("Пользователя с id {} не существует", otherId);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", otherId));
-        }
+        log.info(String.format("Поступил запрос на получение общих друзей пользователей с id %s и с id %s", id, otherId));
         return userService.getCommonFriends(id, otherId);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addingToFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
-        if (!userService.getUsers().contains(userService.getUserById(friendId))) {
-            log.error("Пользователя с id {} не существует", friendId);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
-        }
+        log.info(String.format("Поступил запрос на добавление пользователю с id %s друга с id %s", id, friendId));
         userService.addingToFriends(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void deletingFromFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
-        if (id < 0 || friendId < 0) {
-            log.error("Пользователя с id {} или пользователя с {} не существует", id, friendId);
-            throw new NotFoundException(String.format("Пользователя с id %s или пользователя с %s не существует", id, friendId));
-        }
-        if (!userService.getUsers().contains(userService.getUserById(id))) {
-            log.error("Пользователя с id {} не существует", id);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", id));
-        }
-        if (!userService.getUsers().contains(userService.getUserById(friendId))) {
-            log.error("Пользователя с id {} не существует", friendId);
-            throw new NotFoundException(String.format("Пользователя с id %s не существует", friendId));
-        }
+        log.info(String.format("Поступил запрос на удаление у пользователя с id %s друга с id %s", id, friendId));
         userService.deletingFromFriends(id, friendId);
     }
 }

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -8,23 +9,30 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@NoArgsConstructor(force = true)
 public class User {
+    public User(String email, String login, String name, LocalDate birthday) {
+        this.email = email;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
+
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
+    @Min(value = 1, message = "Значение id не может быть меньше 1")
     private Integer id;
-    @NotNull
-    @NotBlank
-    @Email
-    private final String email;
-    @NotNull
-    @NotBlank
+    @NotBlank(message = "Email не может быть пустым")
+    @Email(message = "Не верный формат email")
+    private String email;
+    @NotBlank(message = "Login не может быть пустым")
     @Pattern(regexp = "\\S*", message = "Логин не должен содержать пробелов")
-    private final String login;
+    private String login;
     private String name;
-    @NotNull
+    @NotNull(message = "Дата рождения не может быть пустой")
     @Past
-    private final LocalDate birthday;
-    private final Set<Integer> friends = new HashSet<>();
+    private LocalDate birthday;
+    private Set<Integer> friends = new HashSet<>();
 
     public void setFriends(Integer id) {
         friends.add(id);

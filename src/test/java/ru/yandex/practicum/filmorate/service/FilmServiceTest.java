@@ -6,8 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -23,6 +23,7 @@ class FilmServiceTest {
     private static Validator validator;
     private static FilmService filmService;
     private static UserService userService;
+    private static InMemoryUserStorage userStorage;
     private static Film film1;
     private static Film film2;
     private static Film film3;
@@ -35,8 +36,9 @@ class FilmServiceTest {
 
     @BeforeEach
     public void setController() {
-        filmService = new FilmService(new InMemoryFilmStorage());
-        userService = new UserService(new InMemoryUserStorage());
+        userStorage = new InMemoryUserStorage();
+        userService = new UserService(userStorage);
+        filmService = new FilmService(new InMemoryFilmStorage(), userStorage);
         film1 = new Film("film", "descr film", LocalDate.parse("2023-01-01"), 120);
         film2 = new Film("film2", "descr film", LocalDate.parse("2023-01-01"), 120);
         film3 = new Film("film3", "descr film", LocalDate.parse("2023-01-01"), 120);
@@ -125,7 +127,7 @@ class FilmServiceTest {
     void shouldBeLikedFilm() {
         filmService.createFilm(film1);
         assertEquals(0, filmService.getFilmById(1).getLikes().size());
-        userService.createUser(new User("mail@yandex.ru", "login", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail@yandex.ru", "login","name", LocalDate.parse("1985-06-06")));
         filmService.setLike(1, 1);
         assertEquals(1, filmService.getFilmById(1).getLikes().size());
     }
@@ -135,7 +137,7 @@ class FilmServiceTest {
     void shouldBeRemovedLikeFromFilm() {
         filmService.createFilm(film1);
         assertEquals(0, filmService.getFilmById(1).getLikes().size());
-        userService.createUser(new User("mail@yandex.ru", "login", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail@yandex.ru", "login", "name", LocalDate.parse("1985-06-06")));
         filmService.setLike(1, 1);
         assertEquals(1, filmService.getFilmById(1).getLikes().size());
         filmService.removeLike(1, 1);
@@ -148,6 +150,9 @@ class FilmServiceTest {
         filmService.createFilm(FilmServiceTest.film1);
         filmService.createFilm(FilmServiceTest.film2);
         filmService.createFilm(FilmServiceTest.film3);
+        userService.createUser(new User("mail1@yandex.ru", "login1", "name1", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail2@yandex.ru", "login2", "name2", LocalDate.parse("1985-06-06")));
+        userService.createUser(new User("mail3@yandex.ru", "login3", "name3", LocalDate.parse("1985-06-06")));
         filmService.setLike(1, 1);
         filmService.setLike(2, 1);
         filmService.setLike(2, 2);

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -32,9 +32,9 @@ class UserServiceTest {
     @BeforeEach
     public void setUp() {
         userService = new UserService(new InMemoryUserStorage());
-        user1 = new User("email@yandex.ru", "login1", LocalDate.parse("1917-11-07"));
-        user2 = new User("email@yandex.ru", "login2", LocalDate.parse("1917-11-07"));
-        user3 = new User("email@yandex.ru", "login3", LocalDate.parse("1917-11-07"));
+        user1 = new User("email1@yandex.ru", "login1","name1", LocalDate.parse("1917-11-07"));
+        user2 = new User("email2@yandex.ru", "login2", "name2",  LocalDate.parse("1917-11-07"));
+        user3 = new User("email3@yandex.ru", "login3", "name3", LocalDate.parse("1917-11-07"));
     }
 
     @Test
@@ -47,7 +47,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Проверка валидации пользователя, когда email пустой")
     void shouldGetViolationWhenEmailIsBlank() {
-        User user = new User("", "login", LocalDate.parse("1917-11-07"));
+        User user = new User("", "login", "name", LocalDate.parse("1917-11-07"));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
     }
@@ -55,7 +55,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Проверка валидации пользователя, когда login пустой")
     void shouldGetViolationWhenLoginIsBlank() {
-        User user = new User("email@yandex.ru", "", LocalDate.parse("1917-11-07"));
+        User user = new User("email@yandex.ru", "", "name", LocalDate.parse("1917-11-07"));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
     }
@@ -63,7 +63,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Проверка валидации пользователя, когда дата рождения в будущем")
     void shouldGetViolationWhenDateOfBirthInTheFuture() {
-        User user = new User("email@yandex.ru", "login", LocalDate.parse("2117-11-07"));
+        User user = new User("email@yandex.ru", "login", "name", LocalDate.parse("2117-11-07"));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
     }
@@ -71,7 +71,7 @@ class UserServiceTest {
     @Test
     @DisplayName("Проверка установки имени пользователя как логина, когда имя не задано")
     void shouldGetNameAsLoginWhenNameIsEmpty() {
-        User user = new User("email@yandex.ru", "login", LocalDate.parse("1917-11-07"));
+        User user = new User("email@yandex.ru", "login", "", LocalDate.parse("1917-11-07"));
         userService.createUser(user);
         assertEquals("login", userService.getUsers().get(0).getName());
     }
@@ -80,7 +80,7 @@ class UserServiceTest {
     @DisplayName("Обновление валидного пользователя")
     void shouldBeUpdatedUser() {
         userService.createUser(user1);
-        User user = new User("email@yandex.ru", "loginUpd", LocalDate.parse("1917-11-07"));
+        User user = new User("email@yandex.ru", "loginUpd", "", LocalDate.parse("1917-11-07"));
         user.setId(1);
         userService.updateUser(user);
         assertEquals("loginUpd", userService.getUsers().get(0).getName());
@@ -90,7 +90,7 @@ class UserServiceTest {
     @DisplayName("Получение пользователя по id")
     void shouldGetUserById() {
         User user = userService.createUser(user1);
-        assertEquals(user, userService.getUserById(user.getId()));
+        assertEquals(user, userService.getById(user.getId()));
     }
 
     @Test
