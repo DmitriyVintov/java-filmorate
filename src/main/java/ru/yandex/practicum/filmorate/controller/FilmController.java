@@ -19,7 +19,7 @@ public class FilmController {
 
     @PostMapping()
     public Film createFilm(@Valid @RequestBody Film film) {
-        log.info("Поступил запрос на создание фильма");
+        log.info("Поступил запрос на создание фильма.");
         return filmService.createFilm(film);
     }
 
