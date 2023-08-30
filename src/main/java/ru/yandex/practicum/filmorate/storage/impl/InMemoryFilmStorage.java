@@ -5,10 +5,9 @@ import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import javax.validation.ValidationException;
 import java.util.*;
-import java.util.stream.Collectors;
 
+@SuppressWarnings("checkstyle:Regexp")
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Integer, Film> films = new HashMap<>();
@@ -56,20 +55,4 @@ public class InMemoryFilmStorage implements FilmStorage {
         getById(filmId).removeLike(userId);
     }
 
-    @Override
-    public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        List<Film> films = getAll();
-        List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
-        switch (sortBy) {
-            case "year":
-                filmsByDirector = filmsByDirector.stream().sorted(Comparator.comparing(Film::getReleaseDate)).collect(Collectors.toList());
-                break;
-            case "likes":
-                filmsByDirector = filmsByDirector.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size()).collect(Collectors.toList());
-                break;
-            default:
-                throw new ValidationException("Неверные параметры в запросе!");
-        }
-        return filmsByDirector;
-    }
 }

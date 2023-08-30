@@ -25,7 +25,7 @@ public class DirectorController {
 
     @GetMapping("/{id}")
     public Director getDirector(@PathVariable int id) {
-        log.info("Поступил запрос на получение режиссера");
+        log.info(String.format("Поступил запрос на получение режиссера с id %s", id));
         return directorService.getById(id);
     }
 
@@ -37,13 +37,13 @@ public class DirectorController {
 
     @PutMapping
     public Director updateDirector(@Valid @RequestBody Director director) {
-        log.info("Поступил запрос на обновление режиссера");
+        log.info(String.format("Поступил запрос на обновление режиссера с id %s", director.getId()));
         return directorService.update(director);
     }
 
     @DeleteMapping("/{id}")
     public void deleteDirector(@PathVariable int id) {
-        log.info("Поступил запрос на удаление режиссера");
+        log.info(String.format("Поступил запрос на удаление режиссера с id %s", id));
         directorService.deleteById(id);
     }
 }

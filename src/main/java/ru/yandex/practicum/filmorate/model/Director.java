@@ -16,7 +16,6 @@ public class Director {
     private int id;
 
     @NotBlank(message = "Имя режиссера не может быть пустым")
-    @NotNull(message = "Имя режиссера не может отсутствовать")
     private String name;
 
     public Director(int id, String name) {

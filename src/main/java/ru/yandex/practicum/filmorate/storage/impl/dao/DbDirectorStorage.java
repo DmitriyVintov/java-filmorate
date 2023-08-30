@@ -20,7 +20,7 @@ public class DbDirectorStorage implements Storage<Director> {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public Director checkDirector(Integer id) {
+    private Director checkDirector(Integer id) {
         String sql = "SELECT * FROM directors WHERE director_id = ?";
         List<Director> checkedDirector = jdbcTemplate.query(sql, (rs, rowNum) -> directorRowMapper(rs), id);
         if (checkedDirector.size() == 0) {

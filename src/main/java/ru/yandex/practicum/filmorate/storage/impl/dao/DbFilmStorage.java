@@ -13,10 +13,8 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
-import javax.validation.ValidationException;
 import java.sql.Date;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -158,8 +156,8 @@ public class DbFilmStorage implements FilmStorage {
                 rs.getInt("genre_id"), rs.getString("genre_name")), filmId));
     }
 
-    private List<Director> addFilmDirectors(List<Director> filmDirectors, int filmId) {
-        List<Director> result = new ArrayList<>();
+    private Set<Director> addFilmDirectors(Set<Director> filmDirectors, int filmId) {
+        Set<Director> result = new HashSet<>();
         Set<Integer> directorsId = new HashSet<>();
         String sql = "INSERT INTO films_directors (film_id, director_id) VALUES(?,?)";
         for (Director director : filmDirectors) {
@@ -173,7 +171,7 @@ public class DbFilmStorage implements FilmStorage {
         return result;
     }
 
-    private List<Director> updateFilmDirectors(List<Director> filmDirectors, int filmId) {
+    private Set<Director> updateFilmDirectors(Set<Director> filmDirectors, int filmId) {
         String sql = "DELETE FROM films_directors WHERE film_id = ?";
         jdbcTemplate.update(sql, filmId);
         if (filmDirectors.size() != 0) {
@@ -186,34 +184,16 @@ public class DbFilmStorage implements FilmStorage {
         if (!films.isEmpty()) {
             String directorsSql = "SELECT * FROM films_directors JOIN directors ON " +
                     "films_directors.director_id = directors.director_id WHERE film_id IN (SELECT film_id FROM films)";
-            Map<Integer, List<Director>> filmDirectorsMap = new HashMap<>();
+            Map<Integer, Set<Director>> filmDirectorsMap = new HashMap<>();
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(directorsSql);
             for (Map<String, Object> row : rows) {
                 int filmId = (int) row.get("film_id");
                 Director director = new Director((Integer) row.get("director_id"), (String) row.get("director_name"));
-                filmDirectorsMap.computeIfAbsent(filmId, k -> new ArrayList<>()).add(director);
+                filmDirectorsMap.computeIfAbsent(filmId, k -> new HashSet<>()).add(director);
             }
             for (Film film : films) {
-                film.setDirectors(filmDirectorsMap.getOrDefault(film.getId(), new ArrayList<>()));
+                film.setDirectors(filmDirectorsMap.getOrDefault(film.getId(), new HashSet<>()));
             }
         }
-    }
-
-    @Override
-    public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        directorStorage.getById(directorId);
-        List<Film> films = getAll();
-        List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
-        switch (sortBy) {
-            case "year":
-                filmsByDirector = filmsByDirector.stream().sorted(Comparator.comparing(Film::getReleaseDate)).collect(Collectors.toList());
-                break;
-            case "likes":
-                filmsByDirector = filmsByDirector.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size()).collect(Collectors.toList());
-                break;
-            default:
-                throw new ValidationException("Неверные параметры в запросе!");
-        }
-        return filmsByDirector;
     }
 }

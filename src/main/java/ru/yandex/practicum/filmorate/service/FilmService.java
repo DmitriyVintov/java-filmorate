@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.Storage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Comparator;
@@ -24,9 +26,14 @@ public class FilmService {
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
 
-    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage, @Qualifier("dbUserStorage") UserStorage userStorage) {
+    private final Storage<Director> directorStorage;
+
+    public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
+                       @Qualifier("dbUserStorage") UserStorage userStorage,
+                       Storage<Director> directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.directorStorage = directorStorage;
     }
 
     public Film createFilm(Film film) {
@@ -107,6 +114,19 @@ public class FilmService {
     }
 
     public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        return filmStorage.getSortedFilmsByDirector(directorId, sortBy);
+        directorStorage.getById(directorId);
+        List<Film> films = filmStorage.getAll();
+        List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
+        switch (sortBy) {
+            case "year":
+                filmsByDirector = filmsByDirector.stream().sorted(Comparator.comparing(Film::getReleaseDate)).collect(Collectors.toList());
+                break;
+            case "likes":
+                filmsByDirector = filmsByDirector.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size()).collect(Collectors.toList());
+                break;
+            default:
+                throw new javax.validation.ValidationException("Неверные параметры в запросе!");
+        }
+        return filmsByDirector;
     }
 }
