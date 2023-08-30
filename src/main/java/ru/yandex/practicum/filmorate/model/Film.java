@@ -7,7 +7,9 @@ import org.springframework.validation.annotation.Validated;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -38,6 +40,7 @@ public class Film {
     private Set<Integer> likes = new HashSet<>();
     @Valid
     private Set<Genre> genres = new HashSet<>();
+    private List<Director> directors = new ArrayList<>();
     private Mpa mpa;
     private int rate = 0;
 

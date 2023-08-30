@@ -105,4 +105,8 @@ public class FilmService {
             throw new NotFoundException(String.format("Пользователя с id %s не существует", userId));
         }
     }
+
+    public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
+        return filmStorage.getSortedFilmsByDirector(directorId, sortBy);
+    }
 }
