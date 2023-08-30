@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -14,7 +13,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,12 +35,6 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        Optional<Film> first = getFilms().stream()
-                .filter(film1 -> film1.getName().equals(film.getName()))
-                .findFirst();
-        if (first.isPresent()) {
-            throw new DataAlreadyExistException("Фильм с таким названием уже существует");
-        }
         log.info("Создан фильм: {}", film.toString());
         return filmStorage.create(film);
     }
@@ -62,7 +54,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         validateFilm(film.getId());
-        log.info("Фильм обновлен: {}", film.toString());
+        log.info("Фильм обновлен: {}", film);
         return filmStorage.update(film);
     }
 
