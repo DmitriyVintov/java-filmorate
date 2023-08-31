@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -42,6 +43,8 @@ public class DbFilmStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private final Storage<Director> directorStorage;
+
+    private  final DbMpaStorage dbMpaStorage;
 
     @Override
     public Film create(Film film) {
@@ -174,11 +177,89 @@ public class DbFilmStorage implements FilmStorage {
     private Set<Director> updateFilmDirectors(Set<Director> filmDirectors, int filmId) {
         String sql = "DELETE FROM films_directors WHERE film_id = ?";
         jdbcTemplate.update(sql, filmId);
-        if (filmDirectors.size() != 0) {
+        if (!filmDirectors.isEmpty()) {
             filmDirectors = addFilmDirectors(filmDirectors, filmId);
         }
         return filmDirectors;
     }
+
+    @Override
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        String sql;
+        List<Film> films;
+        if (genreId == -1 && year == -1) {
+            sql = "SELECT f.*, " +
+                    "COUNT(l.user_id) AS rating FROM films f " +
+                    "LEFT JOIN likes l on f.film_id = l.film_id " +
+                    "GROUP BY f.film_id " +
+                    "ORDER BY rating DESC LIMIT ?";
+            films = jdbcTemplate.query(sql, (rs, rowNum) -> new Film(
+                    rs.getInt("film_id"),
+                    rs.getString("film_name"),
+                    rs.getString("description"),
+                    rs.getDate("release_date").toLocalDate(),
+                    rs.getInt("duration"),
+                    getFilmGenres(rs.getInt("film_id")),
+                    dbMpaStorage.getById(rs.getInt("mpa_id")),
+                    rs.getInt("rate")
+            ), count);
+        } else if (genreId > 0 && year == -1) {
+            sql = "SELECT f.*, COUNT(l.user_id) AS rating FROM films f " +
+                    "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                    "LEFT JOIN films_genres gf ON f.film_id = gf.film_id " +
+                    "WHERE gf.genre_id = ? " +
+                    "GROUP BY f.film_id " +
+                    "ORDER BY rating DESC LIMIT ?";
+            films = jdbcTemplate.query(sql, (rs, rowNum) -> new Film(
+                    rs.getInt("film_id"),
+                    rs.getString("film_name"),
+                    rs.getString("description"),
+                    rs.getDate("release_date").toLocalDate(),
+                    rs.getInt("duration"),
+                    getFilmGenres(rs.getInt("film_id")),
+                    dbMpaStorage.getById(rs.getInt("mpa_id")),
+                    rs.getInt("rate")
+            ), genreId, count);
+        } else if (genreId == -1 && year > 0) {
+            sql = "SELECT f.*, COUNT(l.user_id) AS rating FROM films f " +
+                    "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                    "WHERE EXTRACT(YEAR FROM release_date) = ? " +
+                    "GROUP BY f.film_id " +
+                    "ORDER BY rating DESC LIMIT ?";
+            films = jdbcTemplate.query(sql, (rs, rowNum) -> new Film(
+                    rs.getInt("film_id"),
+                    rs.getString("film_name"),
+                    rs.getString("description"),
+                    rs.getDate("release_date").toLocalDate(),
+                    rs.getInt("duration"),
+                    getFilmGenres(rs.getInt("film_id")),
+                    dbMpaStorage.getById(rs.getInt("mpa_id")),
+                    rs.getInt("rate")
+            ), year, count);
+        } else if (genreId > 0 && year > 0) {
+            sql = "SELECT f.*, COUNT(l.user_id) AS rating FROM films f " +
+                    "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                    "LEFT JOIN films_genres gf ON f.film_id = gf.film_id " +
+                    "WHERE gf.genre_id = ? AND EXTRACT(YEAR FROM release_date) = ? " +
+                    "GROUP BY f.film_id " +
+                    "ORDER BY rating DESC LIMIT ?";
+            films = jdbcTemplate.query(sql, (rs, rowNum) -> new Film(
+                    rs.getInt("film_id"),
+                    rs.getString("film_name"),
+                    rs.getString("description"),
+                    rs.getDate("release_date").toLocalDate(),
+                    rs.getInt("duration"),
+                    getFilmGenres(rs.getInt("film_id")),
+                    dbMpaStorage.getById(rs.getInt("mpa_id")),
+                    rs.getInt("rate")
+            ), genreId, year, count);
+        } else {
+            throw new ValidationException("Неправильные параметры для фильтрации фильмов");
+        }
+
+        return films;
+    }
+
 
     private void loadFilmDirectors(List<Film> films) {
         if (!films.isEmpty()) {
@@ -195,5 +276,17 @@ public class DbFilmStorage implements FilmStorage {
                 film.setDirectors(filmDirectorsMap.getOrDefault(film.getId(), new HashSet<>()));
             }
         }
+    }
+
+    public Set<Genre> getFilmGenres(Integer filmId) {
+        String sql = "SELECT g.* " +
+                "FROM films_genres fg " +
+                "JOIN GENRES g ON fg.genre_id = g.GENRE_ID " +
+                "WHERE  film_id = ?";
+        return new TreeSet<>(jdbcTemplate.query(sql, (rs, rowNum) -> new Genre(
+                        rs.getInt("genre_id"),
+                        rs.getString("genre")),
+                filmId
+        ));
     }
 }
