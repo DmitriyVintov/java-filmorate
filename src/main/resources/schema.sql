@@ -5,6 +5,8 @@ drop table if exists genres cascade;
 drop table if exists films_genres cascade;
 drop table if exists friends cascade;
 drop table if exists likes cascade;
+drop table if exists directors cascade;
+drop table if exists films_directors cascade;
 drop table if exists reviews cascade;
 drop table if exists likes_reviews cascade;
 
