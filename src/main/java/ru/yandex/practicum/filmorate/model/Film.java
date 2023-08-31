@@ -42,6 +42,17 @@ public class Film {
     private Mpa mpa;
     private int rate = 0;
 
+    public Film(Integer id, String name, String description, LocalDate releaseDate, Integer duration, Set<Genre> genres, Mpa mpa, int rate) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.genres = genres;
+        this.mpa = mpa;
+        this.rate = rate;
+    }
+
     public void setLike(Integer id) {
         likes.add(id);
     }

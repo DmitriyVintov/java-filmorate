@@ -15,4 +15,6 @@ public interface Storage<T> {
     T update(T t);
 
     void deleteById(Integer id);
+
+
 }

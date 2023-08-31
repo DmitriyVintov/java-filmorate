@@ -55,4 +55,9 @@ public class InMemoryFilmStorage implements FilmStorage {
         getById(filmId).removeLike(userId);
     }
 
+    @Override
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        return null;
+    }
+
 }

@@ -5,10 +5,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.Storage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Comparator;
@@ -24,14 +22,11 @@ public class FilmService {
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
 
-    private final Storage<Director> directorStorage;
 
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
-                       @Qualifier("dbUserStorage") UserStorage userStorage,
-                       Storage<Director> directorStorage) {
+                       @Qualifier("dbUserStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.directorStorage = directorStorage;
     }
 
     public Film createFilm(Film film) {
@@ -78,17 +73,11 @@ public class FilmService {
         filmStorage.deleteLike(filmId, userId);
     }
 
-    public List<Film> getMostPopularFilms(Integer count) {
+    public List<Film> getMostPopularFilms(Integer count, Integer genreId, Integer year) {
         if (count <= 0) {
             throw new ValidationException("Значение count не может быть отрицательным");
         }
-        List<Film> mostPopularFilms = filmStorage.getAll().stream()
-                .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
-                        .thenComparing(Film::getReleaseDate).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-        log.info("Получение списка самых популярных фильмов: {}", mostPopularFilms);
-        return mostPopularFilms;
+        return filmStorage.getPopularFilms(count, genreId, year);
     }
 
     private void validateFilm(Integer id) {
@@ -106,9 +95,11 @@ public class FilmService {
     }
 
     public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        directorStorage.getById(directorId);
         List<Film> films = filmStorage.getAll();
         List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
+        if (filmsByDirector.size() == 0) {
+            throw new NotFoundException("Такого режиссера нет!");
+        }
         switch (sortBy) {
             case "year":
                 filmsByDirector = filmsByDirector.stream().sorted(Comparator.comparing(Film::getReleaseDate)).collect(Collectors.toList());
