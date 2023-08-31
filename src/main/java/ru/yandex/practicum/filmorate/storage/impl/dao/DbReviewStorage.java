@@ -41,7 +41,6 @@ public class DbReviewStorage {
     private static final String UPDATE_DISLIKE_COUNT =
             "UPDATE reviews SET useful = useful - 1 WHERE review_id = ?";
 
-
     private static final String GET_REVIEWS_BY_FILM =
             "SELECT * FROM reviews WHERE film_id = COALESCE(?, film_id) ORDER BY useful DESC LIMIT ?";
 
