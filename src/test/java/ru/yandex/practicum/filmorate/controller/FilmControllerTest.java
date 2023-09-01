@@ -5,16 +5,11 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.impl.dao.DbFilmStorage;
-import ru.yandex.practicum.filmorate.storage.impl.dao.DbUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -30,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @SpringBootTest
 @AutoConfigureTestDatabase
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@RequiredArgsConstructor(onConstructor_ = @Autowired )
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmControllerTest {
     private final FilmController filmController;
     private final UserController userController;
@@ -152,8 +147,7 @@ class FilmControllerTest {
     }
 
     @Test
-    void getCommonFilmsTest(){
-
+    void getCommonFilmsTest() {
         filmController.createFilm(film1);
         filmController.createFilm(film2);
         filmController.createFilm(film4);
