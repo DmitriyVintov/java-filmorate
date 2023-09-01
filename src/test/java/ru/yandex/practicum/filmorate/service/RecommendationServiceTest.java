@@ -23,23 +23,26 @@ class RecommendationServiceTest {
     @BeforeEach
     void setUp() {
         List<Film> filmList;
+
         for (int i = 0; i <= 10; i++) {
             userService.createUser(new User("email" + i, "login" + i, "name" + i, LocalDate.of(1994, 10, 10)));
         }
+
         for (int i = 0; i <= 10; i++) {
-            filmService.createFilm(new Film("name"+i,"description"+i,LocalDate.of(2005,5,23),60));
-
+            filmService.createFilm(new Film("name" + i, "description" + i, LocalDate.of(2005, 5, 23), 60));
         }
-        filmList = filmService.getFilms();
-        for(Film film : filmList){
-            int rnd = 10;
-            int useInt =(int) (Math.random() * rnd)+1;
 
-            for (int k = 0; k<= useInt; k++){
-                film.setLike((int)(Math.random()* rnd)+1);
+        filmList = filmService.getFilms();
+        for (Film film : filmList) {
+            int rnd = 10;
+            int useInt = (int) (Math.random() * rnd) + 1;
+
+            for (int k = 0; k <= useInt; k++) {
+                film.setLike((int) (Math.random() * rnd) + 1);
             }
         }
-        for (Film film : filmList){
+
+        for (Film film : filmList) {
             filmService.updateFilm(film);
         }
 
