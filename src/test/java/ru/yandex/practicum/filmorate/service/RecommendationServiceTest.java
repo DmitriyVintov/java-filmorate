@@ -1,13 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -18,15 +16,14 @@ import java.util.List;
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @AutoConfigureTestDatabase
-class RecomendationServiceTest {
+class RecommendationServiceTest {
     private final UserService userService;
     private final FilmService filmService;
-    private final RecomendationService recomendationService;
+    private final RecommendationService recommendationService;
 
     @BeforeEach
     void setUp() {
-        List<User> userList = new ArrayList<>(10);
-        List<Film> filmList = new ArrayList<>();
+        List<Film> filmList;
         for (int i = 0; i <= 10; i++) {
             userService.createUser(new User("email" + i, "login" + i, "name" + i, LocalDate.of(1994, 10, 10)));
         }
@@ -51,6 +48,6 @@ class RecomendationServiceTest {
 
     @Test
     void testRecomendation(){
-        recomendationService.getRecomendation(1);
+        recommendationService.getRecommendation(1);
     }
 }

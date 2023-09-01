@@ -5,13 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.RecomendationService;
+import ru.yandex.practicum.filmorate.service.RecommendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -20,7 +19,7 @@ import java.util.Set;
 @Slf4j
 public class UserController {
     private final UserService userService;
-    private final RecomendationService recomendationService;
+    private final RecommendationService recommendationService;
 
     @PostMapping()
     public User createUser(@Valid @RequestBody User user) {
@@ -78,6 +77,6 @@ public class UserController {
 
     @GetMapping("/{id}/recommendations")
     public List<Film> getRecommendation(@PathVariable int id){
-        return recomendationService.getRecomendation(id);
+        return recommendationService.getRecommendation(id);
     }
 }
