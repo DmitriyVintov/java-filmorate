@@ -6,14 +6,13 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.Storage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,14 +25,10 @@ public class FilmService {
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
 
-    private final Storage<Director> directorStorage;
-
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
-                       @Qualifier("dbUserStorage") UserStorage userStorage,
-                       Storage<Director> directorStorage) {
+                       @Qualifier("dbUserStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.directorStorage = directorStorage;
     }
 
     public Film createFilm(Film film) {
@@ -62,7 +57,7 @@ public class FilmService {
 
     public Film updateFilm(Film film) {
         validateFilm(film.getId());
-        log.info("Фильм обновлен: {}", film.toString());
+        log.info("Фильм обновлен: {}", film);
         return filmStorage.update(film);
     }
 
@@ -86,19 +81,6 @@ public class FilmService {
         filmStorage.deleteLike(filmId, userId);
     }
 
-    public List<Film> getMostPopularFilms(Integer count) {
-        if (count <= 0) {
-            throw new ValidationException("Значение count не может быть отрицательным");
-        }
-        List<Film> mostPopularFilms = filmStorage.getAll().stream()
-                .sorted(Comparator.nullsLast(Comparator.comparingInt((Film film) -> film.getLikes().size()))
-                        .thenComparing(Film::getReleaseDate).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-        log.info("Получение списка самых популярных фильмов: {}", mostPopularFilms);
-        return mostPopularFilms;
-    }
-
     private void validateFilm(Integer id) {
         if (filmStorage.getById(id) == null) {
             log.error("Фильма с id {} не существует", id);
@@ -114,9 +96,11 @@ public class FilmService {
     }
 
     public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        directorStorage.getById(directorId);
         List<Film> films = filmStorage.getAll();
         List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
+        if (filmsByDirector.isEmpty()) {
+            throw new NotFoundException("Такого режиссера нет!");
+        }
         switch (sortBy) {
             case "year":
                 filmsByDirector = filmsByDirector.stream().sorted(Comparator.comparing(Film::getReleaseDate)).collect(Collectors.toList());
@@ -129,4 +113,29 @@ public class FilmService {
         }
         return filmsByDirector;
     }
+
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Значение count не может быть отрицательным");
+        }
+
+        List<Film> films = filmStorage.getAll();
+
+        return films.stream()
+                .filter(film -> (genreId == null || filmHasGenre(film, genreId)) &&
+                        (year == null || filmReleasedInYear(film, year)))
+                .sorted(Comparator.comparingInt(film -> -film.getLikes().size()))
+                .limit(count)
+                .collect(Collectors.toList());
+
+    }
+
+    private boolean filmHasGenre(Film film, Integer genreId) {
+        return film.getGenres().stream().anyMatch(genre -> Objects.equals(genre.getId(), genreId));
+    }
+
+    private boolean filmReleasedInYear(Film film, Integer year) {
+        return film.getReleaseDate().getYear() == year;
+    }
+
 }
