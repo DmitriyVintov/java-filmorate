@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.Storage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ public class FilmService {
     private final UserStorage userStorage;
 
     private final Storage<Director> directorStorage;
+
+    private static final int MIN_SIZE = 2;
 
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
                        @Qualifier("dbUserStorage") UserStorage userStorage,
@@ -120,5 +123,32 @@ public class FilmService {
                 throw new javax.validation.ValidationException("Неверные параметры в запросе!");
         }
         return filmsByDirector;
+    }
+
+    public List<Film> getFilmsByNameOrDirectorName(String query, String by) {
+        List<Film> result = new ArrayList<>();
+        List<Film> films = filmStorage.getAll();
+        String[] parts = by.split(",");
+        if (parts.length == MIN_SIZE) {
+            result.addAll(films.stream()
+                    .filter(film -> film.getDirectors().stream().anyMatch(director -> director.getName()
+                            .contains(query.toLowerCase()))).collect(Collectors.toList()));
+            result.addAll(films.stream()
+                    .filter(film -> film.getName().toLowerCase().contains(query.toLowerCase()))
+                    .collect(Collectors.toList()));
+        } else {
+            if (parts[0].equals("director")) {
+                result = films.stream()
+                        .filter(film -> film.getDirectors().stream()
+                                .anyMatch(director -> director.getName().contains(query.toLowerCase())))
+                        .collect(Collectors.toList());
+            } else if (parts[0].equals("title")) {
+                result = films.stream()
+                        .filter(film -> film.getName().toLowerCase().contains(query.toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+        }
+        return result.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
+                .collect(Collectors.toList());
     }
 }
