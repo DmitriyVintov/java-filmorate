@@ -3,17 +3,16 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +24,8 @@ public class FilmService {
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
 
+    private static final int MIN_SIZE = 2;
+
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
                        @Qualifier("dbUserStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
@@ -32,12 +33,6 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        Optional<Film> first = getFilms().stream()
-                .filter(film1 -> film1.getName().equals(film.getName()))
-                .findFirst();
-        if (first.isPresent()) {
-            throw new DataAlreadyExistException("Фильм с таким названием уже существует");
-        }
         log.info("Создан фильм: {}", film.toString());
         return filmStorage.create(film);
     }
@@ -138,4 +133,31 @@ public class FilmService {
         return film.getReleaseDate().getYear() == year;
     }
 
+
+    public List<Film> getFilmsByNameOrDirectorName(String query, String by) {
+        List<Film> result = new ArrayList<>();
+        List<Film> films = filmStorage.getAll();
+        String[] parts = by.split(",");
+        if (parts.length == MIN_SIZE) {
+            result.addAll(films.stream()
+                    .filter(film -> film.getDirectors().stream().anyMatch(director -> director.getName()
+                            .contains(query.toLowerCase()))).collect(Collectors.toList()));
+            result.addAll(films.stream()
+                    .filter(film -> film.getName().toLowerCase().contains(query.toLowerCase()))
+                    .collect(Collectors.toList()));
+        } else {
+            if (parts[0].equals("director")) {
+                result = films.stream()
+                        .filter(film -> film.getDirectors().stream()
+                                .anyMatch(director -> director.getName().contains(query.toLowerCase())))
+                        .collect(Collectors.toList());
+            } else if (parts[0].equals("title")) {
+                result = films.stream()
+                        .filter(film -> film.getName().toLowerCase().contains(query.toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+        }
+        return result.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
+                .collect(Collectors.toList());
+    }
 }

@@ -19,7 +19,7 @@ public class FilmController {
 
     @PostMapping()
     public Film createFilm(@Valid @RequestBody Film film) {
-        log.info("Поступил запрос на создание фильма");
+        log.info("Поступил запрос на создание фильма.");
         return filmService.createFilm(film);
     }
 
@@ -70,5 +70,10 @@ public class FilmController {
     @GetMapping("/director/{directorId}")
     public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
         return filmService.getSortedFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<Film> getFilmsByNameOrDirectorName(@RequestParam String query, @RequestParam String by) {
+        return filmService.getFilmsByNameOrDirectorName(query, by);
     }
 }
