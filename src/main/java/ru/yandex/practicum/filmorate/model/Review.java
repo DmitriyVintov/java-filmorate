@@ -8,7 +8,6 @@ import javax.validation.constraints.NotNull;
 
 @Data
 public class Review {
-
     @NotNull(message = "Id отзыва не может быть пустым")
     @Min(value = 1, message = "Значение id не может быть меньше 1")
     private Integer reviewId;

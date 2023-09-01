@@ -21,7 +21,6 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j
 public class ReviewController {
-
     private final ReviewService reviewService;
 
     @PostMapping

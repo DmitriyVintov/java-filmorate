@@ -15,7 +15,6 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class ReviewService {
-
     private final DbReviewStorage dbReviewStorage;
 
     public Review addReview(Review review) {
@@ -63,6 +62,7 @@ public class ReviewService {
 
     public List<Review> getReviewsByFilmIdWithCount(Integer filmId, Integer count) {
         if (count <= 0) {
+            log.error("Передано отрицательное значение count.");
             throw new ValidationException("Значение count не может быть отрицательным");
         }
         log.info(String.format("Получение списка всех отзывов по идентификатору фильма с id %s", filmId));
