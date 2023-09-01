@@ -1,87 +1,119 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@Service
 @AllArgsConstructor
+@Slf4j
 public class RecomendationService {
-    private FilmService filmService;
-    private UserService userService;
-    private GenreService genreService;
+
+    private final FilmService filmService;
+    private final UserService userService;
 
     public void getRecomendation(int userId) {
-        Map<User, HashMap<Film, Integer>> userFilmsHashMap = new HashMap<>();
-        Map<User, HashMap<Film, Integer>> diff = new HashMap<>();
-        Map<User, HashMap<Film, Integer>> freq = new HashMap<>();
-        Map<Film, Integer> filmIntegerHashMap = new HashMap<>();
+        Map<User, Map<Film, Integer>> userFilmsHashMap = new HashMap<>();
+        Map<User, Map<Film, Integer>> diff = new HashMap<>();
+        Map<User, Map<Film, Integer>> freq = new HashMap<>();
+        Map<User, Integer> userIntegerHashMapIntersect = new HashMap<>();
+        Map<User, List<Film>> userListMap = new HashMap<>();
+        List<User> users = userService.getUsers();
+        List<Film> allFilm = filmService.getFilms();
+        //Составление карты предпочтений пользователей
+        for (User user : users) {
+            Map<Film, Integer> likesFilm = new HashMap<>();
+            List<Film> userLikesFilms = filmService.getFilms().stream().filter(e -> e.getLikes()
+                    .contains(user.getId())).collect(Collectors.toList());
 
-        filmService.getFilms().stream().map(e -> e.getLikes().stream().map(e -> userFilmsHashMap.put(userFilmsHashMap.getOrDefault() userService.getById(e),))).close();
-
-        for (User user : userService.getUsers()){
-
-            filmIntegerHashMap.put()
-            userFilmsHashMap.put(user,)
-        }
-
-        List<Film> popular =  filmService.getMostPopularFilms(10);
-        Map<Film,Double> raitingFilm = new HashMap<>();
-        raitingFilm.put(popular.get(0),1.5);
-        raitingFilm.put(popular.get(popular.size()/2),1.0);
-        raitingFilm.put(popular.get(popular.size()-1),0.0);
-
-        filmService.getFilms().stream().filter(e -> e.getLikes().contains(userId)).peek(e -> e.getGenres().stream()
-                .peek(g -> genreIntegerMap.put(g, genreIntegerMap.getOrDefault(g, 0) + 1)).close()).close();
-
-//        for(Film film : filmService.getFilms()) {
-//            if(film.getLikes().contains(userId)){
-//                for(Genre genre : film.getGenres()) {
-//                    genreIntegerMap.put(genre, genreIntegerMap.getOrDefault(genre, 0) + 1);
-//                }
-//            }
-//        }
-//Оценка выставляется на основе того сколько лайков у фильма а что если нам посчитать фильм с максимальным количеством
-// лайков(задесь может пригодиться топ фильмов) это будет 1,5 балла затем со среднем 1 балл и с низким это будет 0 баллов
-// это мы определим степень популярности фильмов у пользователей, на основе этого рейтинга у нас будет понимание что
-// нравиться массам и выдавать это пользователю
-
-        for (HashMap<Film, Integer> films : userFilmsHashMap.values()) {
-            for (Map.Entry<Genre, Integer> e : films.entrySet()) {
-                if (!diff.containsKey(e.getKey())) {
-                    diff.put(e.getKey(), new HashMap<>());
-                    freq.put(e.getKey(), new HashMap<>());
-                }
-
-
-                for (Map.Entry<Genre, Integer> e2 : films.entrySet()) {
-                    int oldCount = 0;
-                    if (freq.get(e.getKey()).containsKey(e2.getKey())) {
-                        oldCount = freq.get(e.getKey()).get(e2.getKey()).intValue();
-                    }
-
-                    int oldDiff = 0;
-                    if (diff.get(e.getKey()).containsKey(e2.getKey())) {
-                        oldDiff = diff.get(e.getKey()).get(e2.getKey()).intValue();
-                    }
-
-                    int observedDiff = e.getValue() - e2.getValue();
-                    freq.get(e.getKey()).put(e2.getKey(), oldCount + 1);
-                    diff.get(e.getKey()).put(e2.getKey(), oldDiff + observedDiff);
-                }
-                for (Film j : diff.keySet()) {
-                    for (Film i : diff.get(j).keySet()) {
-                        double oldValue = diff.get(j).get(i).doubleValue();
-                        int count = freq.get(j).get(i).intValue();
-                        diff.get(j).put(i, (int) (oldValue / count));
-                    }
+            for (Film film : allFilm) {
+                if (userLikesFilms.contains(film)) {
+                    likesFilm.put(film, 1);
+                } else {
+                    likesFilm.put(film, 0);
                 }
             }
-            System.out.println(diff);
+            userFilmsHashMap.put(user, likesFilm);
         }
+
+        //Поиск пересечений интересов среди пользователей
+        for (User user : users) {
+            for (User userFriend : users) {
+                if (!Objects.equals(user, userFriend)) {
+                    Map<Film, Integer> filmsUser = userFilmsHashMap.get(user);
+                    Map<Film, Integer> filmsUserFriend = userFilmsHashMap.get(userFriend);
+                    List<Film> intersect = new ArrayList<>();
+
+                    for (Film film : filmsUser.keySet()) {
+                        if (filmsUser.get(film) == 1 & filmsUserFriend.get(film) == 1) {
+                            intersect.add(film);
+                        }
+                    }
+                    if (userIntegerHashMapIntersect.getOrDefault(user, 0) < intersect.size())
+                        userIntegerHashMapIntersect.put(user, intersect.size());
+                }
+            }
+        }
+        SortedSet<Map.Entry<User,Integer>> sortedIntersect = entriesSortedByValues(userIntegerHashMapIntersect);
+        int max = 0;
+        User user ;
+        List<User> maxIntersect = new ArrayList<>();
+        for (Map.Entry<User,Integer> ent : sortedIntersect) {
+            log.info("Пользователь : {}. Макс пересечений : {}",ent.getKey().getName(),ent.getValue());
+            if(max <= ent.getValue()){
+                max = ent.getValue();
+               maxIntersect.add(ent.getKey());
+            }
+        }
+
+        User user1 = userService.getById(userId);
+        List<Film> inS = new ArrayList<>();
+        Map<User,List<Film>> diffMap = new HashMap<>();
+            for ( User user2 : maxIntersect) {
+
+                if (!Objects.equals(user1, user2)&&!diffMap.containsKey(user2)) {
+                    Map<Film, Integer> filmsUser = userFilmsHashMap.get(user1);
+                    Map<Film, Integer> filmsUserFriend = userFilmsHashMap.get(user2);
+
+                    for (Map.Entry<Film,Integer> entry : filmsUser.entrySet()){
+                        for (Map.Entry<Film, Integer> entry1 : filmsUserFriend.entrySet()){
+                            if (Objects.equals(entry.getKey(),entry1.getKey())&&entry.getValue() == 0 && entry1.getValue()==1 && !inS.contains(entry.getKey())){
+                                inS.add(entry.getKey());
+                            }
+                        }
+                    }
+                    diffMap.put(user1,inS);
+                }
+            }
+
+        printMap(diffMap);
+
+//        userIntegerHashMapIntersect.values().stream().peek(e ->log.info("В коллекции :",e.size())).close();
+
+    }
+
+    public void printMap (Map<User,List<Film>>userListMap) {
+        for ( Map.Entry<User,List<Film>> ent : userListMap.entrySet()) {
+            log.info("Польлзователь: {} Его не пролйканые фильмы : {}", ent.getKey().getId(),Arrays.toString(ent.getValue().toArray()));
+        }
+    }
+
+    static <K,V extends Comparable<? super V>>
+    SortedSet<Map.Entry<K,V>> entriesSortedByValues(Map<K,V> map) {
+        SortedSet<Map.Entry<K,V>> sortedEntries = new TreeSet<Map.Entry<K,V>>(
+                new Comparator<Map.Entry<K,V>>() {
+                    @Override public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+                        int res = e2.getValue().compareTo(e1.getValue());
+                        return res != 0 ? res : 1;
+                    }
+                }
+        );
+        sortedEntries.addAll(map.entrySet());
+        return sortedEntries;
     }
 }
