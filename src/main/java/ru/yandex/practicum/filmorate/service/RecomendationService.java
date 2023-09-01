@@ -17,7 +17,7 @@ public class RecomendationService {
     private final FilmService filmService;
     private final UserService userService;
 
-    public void getRecomendation(int userId) {
+    public List<Film> getRecomendation(int userId) {
         Map<User, Map<Film, Integer>> userFilmsHashMap = new HashMap<>();
         Map<User, Map<Film, Integer>> diff = new HashMap<>();
         Map<User, Map<Film, Integer>> freq = new HashMap<>();
@@ -90,11 +90,11 @@ public class RecomendationService {
                     diffMap.put(user1,inS);
                 }
             }
+            for(List <Film> list :diffMap.values()){
+                return list;
+            }
 
-        printMap(diffMap);
-
-//        userIntegerHashMapIntersect.values().stream().peek(e ->log.info("В коллекции :",e.size())).close();
-
+        return  new ArrayList<>();
     }
 
     public void printMap (Map<User,List<Film>>userListMap) {

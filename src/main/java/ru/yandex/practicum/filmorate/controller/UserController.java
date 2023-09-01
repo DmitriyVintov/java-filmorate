@@ -3,11 +3,15 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.RecomendationService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -16,6 +20,7 @@ import java.util.Set;
 @Slf4j
 public class UserController {
     private final UserService userService;
+    private final RecomendationService recomendationService;
 
     @PostMapping()
     public User createUser(@Valid @RequestBody User user) {
@@ -69,5 +74,10 @@ public class UserController {
     public void deletingFromFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info(String.format("Поступил запрос на удаление у пользователя с id %s друга с id %s", id, friendId));
         userService.deletingFromFriends(id, friendId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendation(@PathVariable int id){
+        return recomendationService.getRecomendation(id);
     }
 }

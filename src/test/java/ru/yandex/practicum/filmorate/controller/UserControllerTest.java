@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,23 +20,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
+@RequiredArgsConstructor
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UserControllerTest {
     @Autowired
-    private final JdbcTemplate jdbcTemplate;
-    @Autowired
-    private UserController userController;
+    private final UserController userController;
     private User user1;
     private User user2;
     private User user3;
 
-    UserControllerTest(@Autowired JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
     @BeforeEach
     void setUp() {
-        userController = new UserController(new UserService(new DbUserStorage(jdbcTemplate)));
         user1 = new User("mail@mail.ru", "login", "name", LocalDate.parse("2011-01-01"));
         user2 = new User("mail2@mail.ru", "loginUpd", "nameUpd", LocalDate.parse("2011-01-01"));
         user3 = new User("mail3@mail.ru", "loginCommon", "nameCommon", LocalDate.parse("2011-01-01"));
