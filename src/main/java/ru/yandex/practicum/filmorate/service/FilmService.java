@@ -160,4 +160,13 @@ public class FilmService {
         return result.stream().sorted((f1, f2) -> f2.getLikes().size() - f1.getLikes().size())
                 .collect(Collectors.toList());
     }
+
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        List<Film> allFilm = getFilms();
+        List<Film> commonFilmsList = allFilm.stream().filter(e -> e.getLikes().contains(userId))
+                .filter(e -> e.getLikes().contains(friendId))
+                .sorted((e,e1) -> Integer.compare(e1.getLikes().size(),e.getLikes().size()))
+                .collect(Collectors.toList());
+        return commonFilmsList;
+    }
 }
