@@ -7,7 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.UserEvent;
+import ru.yandex.practicum.filmorate.model.UserEventOperation;
+import ru.yandex.practicum.filmorate.model.UserEventType;
 import ru.yandex.practicum.filmorate.storage.impl.dao.DbReviewStorage;
+import ru.yandex.practicum.filmorate.storage.impl.dao.DbUserEventStorage;
 
 import java.util.List;
 
@@ -16,11 +20,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewService {
     private final DbReviewStorage dbReviewStorage;
+    private final DbUserEventStorage eventStorage;
 
     public Review addReview(Review review) {
         validateReview(review);
         log.info("Создан отзыв: {}", review);
-        return dbReviewStorage.addReview(review);
+        Review review1 = dbReviewStorage.addReview(review);
+        eventStorage.create(new UserEvent(review1.getUserId(), UserEventType.REVIEW, UserEventOperation.ADD, review1.getReviewId()));
+        return review1;
     }
 
     public Review getReviewById(Integer reviewId) {
@@ -32,10 +39,13 @@ public class ReviewService {
     public Review updateReview(Review review) {
         validateReview(review);
         log.info("Обновлен отзыв: {}", review);
-        return dbReviewStorage.updateReview(review);
+        Review review1 = dbReviewStorage.updateReview(review);
+        eventStorage.create(new UserEvent(getReviewById(review1.getReviewId()).getUserId(), UserEventType.REVIEW, UserEventOperation.UPDATE, review1.getReviewId()));
+        return review1;
     }
 
     public void deleteReview(Integer reviewId) {
+        eventStorage.create(new UserEvent(getReviewById(reviewId).getUserId(), UserEventType.REVIEW, UserEventOperation.REMOVE, reviewId));
         dbReviewStorage.deleteReview(reviewId);
         log.info("Отзыв с id {} удален", reviewId);
     }
