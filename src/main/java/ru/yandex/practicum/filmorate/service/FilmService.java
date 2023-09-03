@@ -6,8 +6,12 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.UserEvent;
+import ru.yandex.practicum.filmorate.model.UserEventOperation;
+import ru.yandex.practicum.filmorate.model.UserEventType;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.dao.DbUserEventStorage;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,13 +27,14 @@ public class FilmService {
     private final FilmStorage filmStorage;
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
-
-    private static final int MIN_SIZE = 2;
+    private final DbUserEventStorage eventStorage;
+    private static final int MIN_SIZE_LIST_CONDITIONS = 2;
 
     public FilmService(@Qualifier("dbFilmStorage") FilmStorage filmStorage,
-                       @Qualifier("dbUserStorage") UserStorage userStorage) {
+                       @Qualifier("dbUserStorage") UserStorage userStorage, DbUserEventStorage eventStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.eventStorage = eventStorage;
     }
 
     public Film createFilm(Film film) {
@@ -67,12 +72,14 @@ public class FilmService {
         validateUser(userId);
         log.info("Пользователь id {} поставил лайк фильму id {}", userId, filmId);
         filmStorage.addLike(filmId, userId);
+        eventStorage.create(new UserEvent(userId, UserEventType.LIKE, UserEventOperation.ADD, filmId));
     }
 
     public void removeLike(Integer filmId, Integer userId) {
         validateFilm(filmId);
         validateUser(userId);
         log.info("Пользователь id {} удалил лайк у фильма id {}", userId, filmId);
+        eventStorage.create(new UserEvent(userId, UserEventType.LIKE, UserEventOperation.REMOVE, filmId));
         filmStorage.deleteLike(filmId, userId);
     }
 
@@ -138,7 +145,7 @@ public class FilmService {
         List<Film> result = new ArrayList<>();
         List<Film> films = filmStorage.getAll();
         String[] parts = by.split(",");
-        if (parts.length == MIN_SIZE) {
+        if (parts.length == MIN_SIZE_LIST_CONDITIONS) {
             result.addAll(films.stream()
                     .filter(film -> film.getDirectors().stream().anyMatch(director -> director.getName()
                             .contains(query.toLowerCase()))).collect(Collectors.toList()));
@@ -163,10 +170,9 @@ public class FilmService {
 
     public List<Film> getCommonFilms(int userId, int friendId) {
         List<Film> allFilm = getFilms();
-        List<Film> commonFilmsList = allFilm.stream().filter(e -> e.getLikes().contains(userId))
+        return allFilm.stream().filter(e -> e.getLikes().contains(userId))
                 .filter(e -> e.getLikes().contains(friendId))
                 .sorted((e,e1) -> Integer.compare(e1.getLikes().size(),e.getLikes().size()))
                 .collect(Collectors.toList());
-        return commonFilmsList;
     }
 }

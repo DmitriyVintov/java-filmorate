@@ -7,7 +7,11 @@ import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
+import ru.yandex.practicum.filmorate.model.UserEventOperation;
+import ru.yandex.practicum.filmorate.model.UserEventType;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.dao.DbUserEventStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,9 +22,11 @@ import java.util.stream.Collectors;
 public class UserService {
     @Qualifier("dbUserStorage")
     private final UserStorage userStorage;
+    private final DbUserEventStorage eventStorage;
 
-    public UserService(@Qualifier("dbUserStorage") UserStorage userStorage) {
+    public UserService(@Qualifier("dbUserStorage") UserStorage userStorage, DbUserEventStorage eventStorage) {
         this.userStorage = userStorage;
+        this.eventStorage = eventStorage;
     }
 
     public User createUser(User user) {
@@ -82,6 +88,7 @@ public class UserService {
         validateUser(friendId);
         validateSelfAddition(id, friendId);
         log.info("Добавление в друзья пользователю с id {} пользователя с id {}", id, friendId);
+        eventStorage.create(new UserEvent(id, UserEventType.FRIEND, UserEventOperation.ADD, getById(friendId).getId()));
         userStorage.addFriend(id, friendId);
     }
 
@@ -90,7 +97,14 @@ public class UserService {
         validateUser(friendId);
         validateSelfAddition(id, friendId);
         log.info("Удаление из друзей пользователя с id {} пользователя с id {}", id, friendId);
+        eventStorage.create(new UserEvent(id, UserEventType.FRIEND, UserEventOperation.REMOVE, getById(friendId).getId()));
         userStorage.deleteFriend(id, friendId);
+    }
+
+    public List<UserEvent> getUserEvents(Integer userId) {
+        validateUser(userId);
+        log.info("Получение событий пользователя с id {}: {}", userId, eventStorage.getAll(userId));
+        return eventStorage.getAll(userId);
     }
 
     private void validateOnCreateUser(User user) {
