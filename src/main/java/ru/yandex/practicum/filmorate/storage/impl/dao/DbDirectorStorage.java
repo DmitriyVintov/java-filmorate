@@ -24,7 +24,7 @@ public class DbDirectorStorage implements Storage<Director> {
         String sql = "SELECT * FROM directors WHERE director_id = ?";
         List<Director> checkedDirector = jdbcTemplate.query(sql, (rs, rowNum) -> directorRowMapper(rs), id);
         if (checkedDirector.size() == 0) {
-            throw new NotFoundException("Режиссера с ID" + id + "нет в базе!");
+            throw new NotFoundException("Режиссера с ID" + id + " нет в базе!");
         }
         return checkedDirector.get(0);
     }

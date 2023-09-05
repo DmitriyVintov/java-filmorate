@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.DataAlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -38,6 +39,11 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
+        List<Film> collect = getFilms().stream().filter(film1 -> film1.getName().equals(film.getName())
+                && film1.getReleaseDate().equals(film.getReleaseDate()) && Objects.equals(film.getDuration(), film1.getDuration())).collect(Collectors.toList());
+        if (!collect.isEmpty()) {
+            throw new DataAlreadyExistException("Такой фильм уже есть");
+        }
         log.info("Создан фильм: {}", film.toString());
         return filmStorage.create(film);
     }
@@ -101,7 +107,7 @@ public class FilmService {
         List<Film> films = filmStorage.getAll();
         List<Film> filmsByDirector = films.stream().filter(film -> film.getDirectors().stream().anyMatch(director -> director.getId() == directorId)).collect(Collectors.toList());
         if (filmsByDirector.isEmpty()) {
-            throw new NotFoundException("Такого режиссера нет!");
+            throw new NotFoundException("Фильмов с таким режиссером нет");
         }
         switch (sortBy) {
             case "year":

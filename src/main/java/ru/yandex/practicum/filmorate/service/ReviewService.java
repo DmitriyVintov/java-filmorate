@@ -25,13 +25,13 @@ public class ReviewService {
     public Review addReview(Review review) {
         validateReview(review);
         log.info("Создан отзыв: {}", review);
-        Review review1 = dbReviewStorage.addReview(review);
+        Review review1 = dbReviewStorage.create(review);
         eventStorage.create(new UserEvent(review1.getUserId(), UserEventType.REVIEW, UserEventOperation.ADD, review1.getReviewId()));
         return review1;
     }
 
     public Review getReviewById(Integer reviewId) {
-        Review review = dbReviewStorage.getReviewById(reviewId);
+        Review review = dbReviewStorage.getById(reviewId);
         log.info("Получение отзыва с id {}: {}", reviewId, review);
         return review;
     }
@@ -39,23 +39,31 @@ public class ReviewService {
     public Review updateReview(Review review) {
         validateReview(review);
         log.info("Обновлен отзыв: {}", review);
-        Review review1 = dbReviewStorage.updateReview(review);
+        Review review1 = dbReviewStorage.update(review);
         eventStorage.create(new UserEvent(getReviewById(review1.getReviewId()).getUserId(), UserEventType.REVIEW, UserEventOperation.UPDATE, review1.getReviewId()));
         return review1;
     }
 
     public void deleteReview(Integer reviewId) {
         eventStorage.create(new UserEvent(getReviewById(reviewId).getUserId(), UserEventType.REVIEW, UserEventOperation.REMOVE, reviewId));
-        dbReviewStorage.deleteReview(reviewId);
+        dbReviewStorage.deleteById(reviewId);
         log.info("Отзыв с id {} удален", reviewId);
     }
 
     public void addLike(Integer userId, Integer reviewId) {
+        if (dbReviewStorage.checkUserReview(userId, reviewId) > 0) {
+            log.error("Пользователь уже ставил лайк отзыву.");
+            throw new ValidationException("Пользователь уже ставил лайк отзыву.");
+        }
         log.info("Пользователь id {} поставил лайк отзыву id {}", userId, reviewId);
         dbReviewStorage.addLike(userId, reviewId);
     }
 
     public void addDislike(Integer userId, Integer reviewId) {
+        if (dbReviewStorage.checkUserReview(userId, reviewId) > 0) {
+            log.error("Пользователь уже ставил дизлайк отзыву.");
+            throw new ValidationException("Пользователь уже ставил дизлайк отзыву.");
+        }
         log.info("Пользователь id {} поставил дизлайк отзыву id {}", userId, reviewId);
         dbReviewStorage.addDislike(userId, reviewId);
     }

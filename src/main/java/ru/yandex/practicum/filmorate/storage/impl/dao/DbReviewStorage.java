@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
-public class DbReviewStorage {
+public class DbReviewStorage implements Storage<Review> {
 
     private static final String GET_REVIEW = "SELECT * FROM reviews WHERE review_id = ?";
 
@@ -46,7 +47,7 @@ public class DbReviewStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public Review addReview(Review review) {
+    public Review create(Review review) {
         checkUserIdExists(review.getUserId());
         checkFilmIdExists(review.getFilmId());
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
@@ -58,44 +59,49 @@ public class DbReviewStorage {
                 "is_Positive", review.getIsPositive(),
                 "user_id", review.getUserId(),
                 "film_id", review.getFilmId(),
-                "useful", review.getRating());
+                "useful", 0);
 
         Number reviewId = simpleJdbcInsert.executeAndReturnKey(params);
         review.setReviewId(reviewId.intValue());
         return review;
     }
 
-    public Review getReviewById(Integer reviewId) {
+    @Override
+    public List<Review> getAll() {
+        return null;
+    }
+
+    public Review getById(Integer reviewId) {
         return jdbcTemplate.query(GET_REVIEW, this::reviewRowMapper, reviewId).stream().findFirst()
                 .orElseThrow(() -> new NotFoundException(String.format("Отзыва с id %s не существует", reviewId)));
     }
 
-    public Review updateReview(Review review) {
-        getReviewById(review.getReviewId());
+    public Review update(Review review) {
+        getById(review.getReviewId());
         jdbcTemplate.update(
                 UPDATE_REVIEW,
                 review.getContent(),
                 review.getIsPositive(),
                 review.getReviewId()
         );
-        return getReviewById(review.getReviewId());
+        return getById(review.getReviewId());
     }
 
-    public void deleteReview(Integer reviewId) {
-        getReviewById(reviewId);
+    public void deleteById(Integer reviewId) {
+        getById(reviewId);
         jdbcTemplate.update(DELETE_REVIEW, reviewId);
     }
 
     public void addLike(Integer userId, Integer reviewId) {
         checkUserIdExists(userId);
-        getReviewById(reviewId);
+        getById(reviewId);
 
         jdbcTemplate.update(ADD_LIKE, userId, reviewId);
         jdbcTemplate.update(UPDATE_LIKE_COUNT, reviewId);
     }
 
     public void addDislike(Integer userId, Integer reviewId) {
-        getReviewById(reviewId);
+        getById(reviewId);
         checkUserIdExists(userId);
 
         jdbcTemplate.update(ADD_DISLIKE, userId, reviewId);
@@ -103,7 +109,7 @@ public class DbReviewStorage {
     }
 
     public void removeLike(Integer userId, Integer reviewId) {
-        getReviewById(reviewId);
+        getById(reviewId);
         checkUserIdExists(userId);
 
         jdbcTemplate.update(REMOVE_LIKE, userId, reviewId);
@@ -111,7 +117,7 @@ public class DbReviewStorage {
     }
 
     public void removeDislike(Integer userId, Integer reviewId) {
-        getReviewById(reviewId);
+        getById(reviewId);
         checkUserIdExists(userId);
 
         jdbcTemplate.update(REMOVE_DISLIKE, userId, reviewId);
@@ -135,7 +141,7 @@ public class DbReviewStorage {
 
     public void checkUserIdExists(Integer userId) throws NotFoundException {
         String checkUser = "SELECT COUNT(user_id) FROM users WHERE user_id = ?";
-        Integer countUser = jdbcTemplate.queryForObject(checkUser, Integer.class, userId);
+        int countUser = jdbcTemplate.queryForObject(checkUser, Integer.class, userId);
 
         if (countUser <= 0) {
             throw new NotFoundException("Пользователя с таким ID " + userId + " не существует.");
@@ -144,10 +150,15 @@ public class DbReviewStorage {
 
     public void checkFilmIdExists(Integer filmId) throws NotFoundException {
         String checkFilm = "SELECT COUNT(film_id) FROM films WHERE film_id = ?";
-        Integer countFilm = jdbcTemplate.queryForObject(checkFilm, Integer.class, filmId);
+        int countFilm = jdbcTemplate.queryForObject(checkFilm, Integer.class, filmId);
 
         if (countFilm <= 0) {
             throw new NotFoundException("Фильма с таким ID " + filmId + " не существует.");
         }
+    }
+
+    public int checkUserReview(Integer userId, Integer reviewId) throws NotFoundException  {
+        String sql = "SELECT COUNT(*) FROM likes_reviews WHERE user_id = ? AND review_id = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, userId, reviewId);
     }
 }
