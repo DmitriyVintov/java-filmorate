@@ -20,6 +20,8 @@ public class DbReviewStorage implements Storage<Review> {
 
     private static final String GET_REVIEW = "SELECT * FROM reviews WHERE review_id = ?";
 
+    private static final String GET_ALL_REVIEW = "SELECT * FROM reviews";
+
     private static final String UPDATE_REVIEW = "UPDATE reviews SET content = ?, is_Positive=? WHERE review_id = ?";
 
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE review_id = ?";
@@ -47,6 +49,7 @@ public class DbReviewStorage implements Storage<Review> {
 
     private final JdbcTemplate jdbcTemplate;
 
+    @Override
     public Review create(Review review) {
         checkUserIdExists(review.getUserId());
         checkFilmIdExists(review.getFilmId());
@@ -68,14 +71,16 @@ public class DbReviewStorage implements Storage<Review> {
 
     @Override
     public List<Review> getAll() {
-        return null;
+        return jdbcTemplate.query(GET_ALL_REVIEW, this::reviewRowMapper);
     }
 
+    @Override
     public Review getById(Integer reviewId) {
         return jdbcTemplate.query(GET_REVIEW, this::reviewRowMapper, reviewId).stream().findFirst()
                 .orElseThrow(() -> new NotFoundException(String.format("Отзыва с id %s не существует", reviewId)));
     }
 
+    @Override
     public Review update(Review review) {
         getById(review.getReviewId());
         jdbcTemplate.update(
@@ -87,6 +92,7 @@ public class DbReviewStorage implements Storage<Review> {
         return getById(review.getReviewId());
     }
 
+    @Override
     public void deleteById(Integer reviewId) {
         getById(reviewId);
         jdbcTemplate.update(DELETE_REVIEW, reviewId);

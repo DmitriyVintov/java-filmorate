@@ -39,11 +39,7 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        List<Film> collect = getFilms().stream().filter(film1 -> film1.getName().equals(film.getName())
-                && film1.getReleaseDate().equals(film.getReleaseDate()) && Objects.equals(film.getDuration(), film1.getDuration())).collect(Collectors.toList());
-        if (!collect.isEmpty()) {
-            throw new DataAlreadyExistException("Такой фильм уже есть");
-        }
+        checkFilmOnDuplicate(film);
         log.info("Создан фильм: {}", film.toString());
         return filmStorage.create(film);
     }
@@ -90,9 +86,18 @@ public class FilmService {
     }
 
     private void validateFilm(Integer id) {
+
         if (filmStorage.getById(id) == null) {
             log.error("Фильма с id {} не существует", id);
             throw new NotFoundException(String.format("Фильма с id %s не существует", id));
+        }
+    }
+
+    private void checkFilmOnDuplicate(Film film) {
+        List<Film> collect = getFilms().stream().filter(film1 -> film1.getName().equals(film.getName())
+                && film1.getReleaseDate().equals(film.getReleaseDate()) && Objects.equals(film.getDuration(), film1.getDuration())).collect(Collectors.toList());
+        if (!collect.isEmpty()) {
+            throw new DataAlreadyExistException("Такой фильм уже есть");
         }
     }
 
