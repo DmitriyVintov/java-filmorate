@@ -19,7 +19,9 @@ public class Film {
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
+        this.mpa = new Mpa(1,"");
     }
+
 
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
@@ -38,6 +40,7 @@ public class Film {
     private Set<Integer> likes = new HashSet<>();
     @Valid
     private Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors = new HashSet<>();
     private Mpa mpa;
     private int rate = 0;
 

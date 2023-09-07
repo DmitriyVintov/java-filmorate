@@ -6,10 +6,12 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.sql.Date;
 import java.util.*;
@@ -39,6 +41,8 @@ public class DbFilmStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
 
+    private final Storage<Director> directorStorage;
+
     @Override
     public Film create(Film film) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(Objects.requireNonNull(jdbcTemplate.getDataSource()))
@@ -58,19 +62,26 @@ public class DbFilmStorage implements FilmStorage {
                 jdbcTemplate.update(SET_GENRES, film.getId(), genre.getId());
             }
         }
+        if (!film.getDirectors().isEmpty()) {
+            addFilmDirectors(film.getDirectors(), film.getId());
+        }
         return getById(film.getId());
     }
 
     @Override
     public Film getById(Integer id) {
-        return jdbcTemplate.query(GET_FILM, filmRowMapper(), id).stream().findFirst()
+        Film film = jdbcTemplate.query(GET_FILM, filmRowMapper(), id).stream().findFirst()
                 .orElseThrow(() -> new NotFoundException(String.format("Фильма с id %s не существует", id)));
+        List<Film> result = Collections.singletonList(film);
+        loadFilmDirectors(result);
+        return result.get(0);
     }
 
     @Override
     public List<Film> getAll() {
         List<Film> films;
-            films = jdbcTemplate.query(GET_ALL_FILMS, filmRowMapper());
+        films = jdbcTemplate.query(GET_ALL_FILMS, filmRowMapper());
+        loadFilmDirectors(films);
         return films;
     }
 
@@ -89,6 +100,11 @@ public class DbFilmStorage implements FilmStorage {
             for (Genre genre : film.getGenres()) {
                 jdbcTemplate.update(SET_GENRES, film.getId(), genre.getId());
             }
+        }
+        if (film.getDirectors() != null) {
+            Film updatedFilm = getById(film.getId());
+            updatedFilm.setDirectors(updateFilmDirectors(film.getDirectors(), film.getId()));
+            return updatedFilm;
         }
         return getById(film.getId());
     }
@@ -138,5 +154,46 @@ public class DbFilmStorage implements FilmStorage {
     private Set<Genre> getGenresFilmById(Integer filmId) {
         return new HashSet<>(jdbcTemplate.query(GET_GENRES, (rs, rowNum) -> new Genre(
                 rs.getInt("genre_id"), rs.getString("genre_name")), filmId));
+    }
+
+    private Set<Director> addFilmDirectors(Set<Director> filmDirectors, int filmId) {
+        Set<Director> result = new HashSet<>();
+        Set<Integer> directorsId = new HashSet<>();
+        String sql = "INSERT INTO films_directors (film_id, director_id) VALUES(?,?)";
+        for (Director director : filmDirectors) {
+            directorsId.add(director.getId());
+        }
+        for (int id : directorsId) {
+            Director director = directorStorage.getById(id);
+            result.add(director);
+            jdbcTemplate.update(sql, filmId, id);
+        }
+        return result;
+    }
+
+    private Set<Director> updateFilmDirectors(Set<Director> filmDirectors, int filmId) {
+        String sql = "DELETE FROM films_directors WHERE film_id = ?";
+        jdbcTemplate.update(sql, filmId);
+        if (filmDirectors.size() != 0) {
+            filmDirectors = addFilmDirectors(filmDirectors, filmId);
+        }
+        return filmDirectors;
+    }
+
+    private void loadFilmDirectors(List<Film> films) {
+        if (!films.isEmpty()) {
+            String directorsSql = "SELECT * FROM films_directors JOIN directors ON " +
+                    "films_directors.director_id = directors.director_id WHERE film_id IN (SELECT film_id FROM films)";
+            Map<Integer, Set<Director>> filmDirectorsMap = new HashMap<>();
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(directorsSql);
+            for (Map<String, Object> row : rows) {
+                int filmId = (int) row.get("film_id");
+                Director director = new Director((Integer) row.get("director_id"), (String) row.get("director_name"));
+                filmDirectorsMap.computeIfAbsent(filmId, k -> new HashSet<>()).add(director);
+            }
+            for (Film film : films) {
+                film.setDirectors(filmDirectorsMap.getOrDefault(film.getId(), new HashSet<>()));
+            }
+        }
     }
 }

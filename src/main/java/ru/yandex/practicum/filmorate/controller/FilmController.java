@@ -19,7 +19,7 @@ public class FilmController {
 
     @PostMapping()
     public Film createFilm(@Valid @RequestBody Film film) {
-        log.info("Поступил запрос на создание фильма");
+        log.info("Поступил запрос на создание фильма.");
         return filmService.createFilm(film);
     }
 
@@ -60,9 +60,25 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> getPopularFilms(
-            @RequestParam(required = false, defaultValue = "10") Integer count) {
-        log.info(String.format("Поступил запрос на получение %s популярных фильмов", count));
-        return filmService.getMostPopularFilms(count);
+    public List<Film> topFilms(@RequestParam(required = false, defaultValue = "10") Integer count,
+                               @RequestParam(required = false) Integer genreId,
+                               @RequestParam(required = false) Integer year) {
+        log.debug("Поступил запрос на просмотр топ {} фильмов.", count);
+        return filmService.getPopularFilms(count, genreId, year);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getSortedFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+        return filmService.getSortedFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<Film> getFilmsByNameOrDirectorName(@RequestParam String query, @RequestParam String by) {
+        return filmService.getFilmsByNameOrDirectorName(query, by);
+    }
+
+    @GetMapping("/common")
+    public List<Film> getCommonFilm(@RequestParam int userId, @RequestParam int friendId) {
+        return filmService.getCommonFilms(userId, friendId);
     }
 }
