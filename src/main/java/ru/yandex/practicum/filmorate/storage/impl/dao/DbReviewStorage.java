@@ -139,9 +139,13 @@ public class DbReviewStorage implements Storage<Review> {
         review.setReviewId(rs.getInt("review_id"));
         review.setContent(rs.getString("content"));
         review.setIsPositive(rs.getBoolean("is_Positive"));
-        review.setUserId(rs.getInt("user_id"));
         review.setFilmId(rs.getInt("film_id"));
         review.setRating(rs.getInt("useful"));
+
+        int userId = rs.getInt("user_id");
+        if (userId != 0) {
+            review.setUserId(userId);
+        }
         return review;
     }
 
@@ -163,7 +167,7 @@ public class DbReviewStorage implements Storage<Review> {
         }
     }
 
-    public int checkUserReview(Integer userId, Integer reviewId) throws NotFoundException  {
+    public int checkUserReview(Integer userId, Integer reviewId) throws NotFoundException {
         String sql = "SELECT COUNT(*) FROM likes_reviews WHERE user_id = ? AND review_id = ?";
         return jdbcTemplate.queryForObject(sql, Integer.class, userId, reviewId);
     }
